@@ -1,0 +1,5 @@
+spacy==2.2.4
+pandas==1.0.1
+joblib==0.14.1
+numpy==1.18.1
+sklearn-crfsuite==0.3.6
