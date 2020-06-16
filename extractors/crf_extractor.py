@@ -4,10 +4,9 @@ import spacy
 import pandas as pd
 
 class CRFExtractor(Extractor):
-    def __init__(self, extractor_name=None, dict_file='extractors/src/nameslist.csv'):
-        Extractor.__init__(self, name=extractor_name)
+    def __init__(self, dict_file='extractors/src/nameslist.csv'):
+        Extractor.__init__(self)
         self.model = joblib.load('extractors/src/crf_model.joblib') 
-        self.nlp = spacy.load("en_core_web_sm")
         self.dictionary = self.load_word_dict(dict_file)
 
 

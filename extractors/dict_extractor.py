@@ -6,11 +6,10 @@ from spacy.matcher import PhraseMatcher
 
 class DictionaryExtractor(Extractor):
     def __init__(self,
-                 name='dict',
                  dict_file='extractors/src/nameslist.csv'):
-        self.nlp = spacy.load('en_core_web_sm')
+        Extractor.__init__(self)
         self.terms = self.load_word_dict(dict_file)
-        self.matcher = self.create_matcher(name)
+        self.matcher = self.create_matcher()
 
 
     def load_word_dict(self,dict_file): 
@@ -21,10 +20,10 @@ class DictionaryExtractor(Extractor):
         return [word.strip().lower() for word in newwordlist]
     
 
-    def create_matcher(self,name):
+    def create_matcher(self):
         matcher = PhraseMatcher(self.nlp.vocab,attr="LOWER")
         patterns = [self.nlp.make_doc(text) for text in self.terms]
-        matcher.add(name, None, *patterns)
+        matcher.add('namelist', None, *patterns)
         return matcher
         
     def extract(self, text):

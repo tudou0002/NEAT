@@ -5,8 +5,16 @@ from extractors.extractor import Extractor
 import re, unicodedata
 
 class NameExtractor(Extractor):
-    def __init__(self, name=None, extractors=['dict','crf'],backoff=['rule']):
-        self.extractors = self.initialize_extractors(extractors)
+    def __init__(self, primary=['dict','crf'],backoff=['rule']):
+        """
+        Initialize the extractor, storing the extractors types and backoff extractor types.
+        Args:
+            extractors (list): extractor types that will always apply extraction on the text
+            backoff (list): extractor types that will only apply extraction on the text if all
+                of the primary extractors failed to extract some names.
+        Returns:
+        """
+        self.primary = self.initialize_extractors(primary)
         self.backoff = self.initialize_extractors(backoff)
 
     
@@ -20,7 +28,7 @@ class NameExtractor(Extractor):
             elif extractor == 'crf':
                 result_extractors.append(CRFExtractor())
             else:
-                print("The extractor type input must be 'dict', 'rule' or 'crf'")
+                raise NameError("Invalid extractor type! The extractor type input must be 'dict', 'rule' or 'crf'")
 
         return result_extractors
 
@@ -28,7 +36,7 @@ class NameExtractor(Extractor):
         extractions = []
         if preprocess:
             text = self.preprocess(text)
-        for ext in self.extractors:
+        for ext in self.primary:
             extractions.extend(ext.extract(text))
         # if extractors fail to extract names, use the back off extractors
         if extractions==[]:
@@ -69,7 +77,7 @@ class NameExtractor(Extractor):
 
         def replace_contraction(text):
             contractions_pattern = re.compile('({})'.format('|'.join(CONTRACTION_MAP.keys())), 
-                                            flags=re.IGNORECASE)#|re.DOTALL)
+                                            flags=re.IGNORECASE)
             def expand_match(contraction):
                 match = contraction.group(0)
                 first_char = match[0]

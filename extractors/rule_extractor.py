@@ -3,8 +3,8 @@ from spacy.matcher import Matcher
 from extractors.extractor import Extractor
 
 class RuleExtractor(Extractor):
-    def __init__(self,extractor_name=None):
-        self.nlp = spacy.load('en_core_web_sm')
+    def __init__(self):
+        Extractor.__init__(self)
         self.patterns = self.define_patterns()
         self.matcher = self.create_matcher(self.patterns)
         
