@@ -19,6 +19,14 @@ class NameExtractor(Extractor):
 
     
     def initialize_extractors(self, extractor_type:list):
+        """
+        Creates the extractors based on the given type
+        Args:
+            extractor_type (list): 'dict', 'rule',
+        Returns:
+            List(extractor): returns a list of extractor object or 
+                             empty list if the extractor_type is an empty list
+        """
         result_extractors = []
         for extractor in extractor_type:
             if extractor == 'dict':
@@ -33,6 +41,14 @@ class NameExtractor(Extractor):
         return result_extractors
 
     def extract(self, text, preprocess=True):
+        """
+            Extracts information from a text using the given extractor types.
+        Args:
+            text (str): the text to extract from.
+            preprocess(bool): True if needed preprocessing
+        Returns:
+            List(str): the list of extraction or the empty list if there are no matches.
+        """
         extractions = []
         if preprocess:
             text = self.preprocess(text)
@@ -46,6 +62,13 @@ class NameExtractor(Extractor):
 
     
     def preprocess(self, text):
+        """
+            Preprocesses the text: expanding contractions, removing emojis and punctuation marks
+        Args:
+            text (str): the text to be preprocessed
+        Returns:
+            str: the text after being preprocessed
+        """
         CONTRACTION_MAP = {
             'names': 'name is',
             'its': 'it is',

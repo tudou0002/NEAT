@@ -1,4 +1,6 @@
 # nameExtractor
+
+
 ## Installation
 Clone or fork this repository, open a terminal window and in the directory where you downloaded nameextractor, type the following commands   
 for Linux

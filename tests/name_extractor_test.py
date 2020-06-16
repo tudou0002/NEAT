@@ -1,13 +1,11 @@
 import unittest
 import numpy as np
-import sys
-sys.path.append(r'C:\Users\lifre\Documents\ht\NER')
-from NameExtractor.extractors.name_extractor import NameExtractor
+from extractors.name_extractor import NameExtractor
 
 class TestNameExtractor(unittest.TestCase):
 
     def setUp(self):
-        self.extractor = NameExtractor('test')
+        self.extractor = NameExtractor()
 
     def test_basic(self):
         # names are in the dictionary
@@ -18,7 +16,7 @@ class TestNameExtractor(unittest.TestCase):
         self.assertCountEqual(extractions, expected)
 
     def test_rule(self):
-        # name is not in the dictionary but fit the rule
+        # name is not in the dictionary but fits the rule
         text = 'My name is Hazel.'
         extractions = self.extractor.extract(text)
 
@@ -40,6 +38,11 @@ class TestNameExtractor(unittest.TestCase):
 
         expected = []
         self.assertCountEqual(extractions, expected)
+
+    
+    def test_nameerror(self):
+        self.assertRaises(NameError, NameExtractor, ['dictionary'], [''])
+
 
 
 if __name__ == '__main__':
