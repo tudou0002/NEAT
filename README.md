@@ -13,7 +13,7 @@ pip install -e .
 for windows:
 ```shell
 python -m venv ne
-ne\Scripts\activate 
+ne/Scripts/activate 
 pip install -e .
 ```
 
