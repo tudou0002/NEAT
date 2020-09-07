@@ -1,6 +1,6 @@
 
 class Entity:
-    def __int__(self, text: str, category:str, begin_offset: int):
+    def __init__(self, text: str, category:str, begin_offset: int):
         """Construct an entity object.
 
         text: the plain text of this entity.
@@ -20,4 +20,12 @@ class Entity:
         """
         return self.text.length
 
+    def __eq__(self, other):
+        """Two entities will equal to each other if they have the same class, 
+        same attributes and from the same parent document. 
 
+        """
+        return self.text == other.text and self.category == other.category and self.begin_offset == other.begin_offset
+
+    def __hash__(self):
+        return hash((self.text, self.category, self.begin_offset))
