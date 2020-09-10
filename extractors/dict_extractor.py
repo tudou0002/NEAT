@@ -3,6 +3,8 @@ import os
 import pandas as pd
 from extractors.extractor import Extractor
 from spacy.matcher import PhraseMatcher
+from extractors.entity import Entity
+from extractors.embeddings.fasttext import FasttextEmbeddings
 
 class DictionaryExtractor(Extractor):
     def __init__(self,
@@ -10,6 +12,7 @@ class DictionaryExtractor(Extractor):
         Extractor.__init__(self)
         self.terms = self.load_word_dict(dict_file)
         self.matcher = self.create_matcher()
+        self.embedding = FasttextEmbeddings()
 
 
     def load_word_dict(self,dict_file): 
@@ -32,5 +35,7 @@ class DictionaryExtractor(Extractor):
         result = []
         for match_id, start, end in matches:
             span = doc[start:end]
-            result.append(span.text)
-        return list(set([x.lower() for x in result]))  
+            ent = Entity(span.text,span.start)
+            ent.score = self.embedding.get_certainty(ent.text)
+            result.append(ent)
+        return result

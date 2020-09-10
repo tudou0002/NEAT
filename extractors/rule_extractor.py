@@ -1,12 +1,15 @@
 import spacy
 from spacy.matcher import Matcher
 from extractors.extractor import Extractor
+from extractors.entity import Entity
+from extractors.embeddings.fasttext import FasttextEmbeddings
 
 class RuleExtractor(Extractor):
     def __init__(self):
         Extractor.__init__(self)
         self.patterns = self.define_patterns()
         self.matcher = self.create_matcher(self.patterns)
+        self.embedding = FasttextEmbeddings()
         
     def create_matcher(self,  patterns):
         matcher = Matcher(self.nlp.vocab)
@@ -50,5 +53,7 @@ class RuleExtractor(Extractor):
             else:
                 name_start = start + 1
             span = doc[name_start:end] 
-            result.append(span.text.lower())
+            ent = Entity(span.text,span.start)
+            ent.score = self.embedding.get_certainty(ent.text)
+            result.append(ent)
         return result

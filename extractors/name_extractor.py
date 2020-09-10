@@ -5,7 +5,7 @@ from extractors.extractor import Extractor
 import re, unicodedata
 
 class NameExtractor(Extractor):
-    def __init__(self, primary=['dict','crf'],backoff=['rule']):
+    def __init__(self, primary=['dict'],backoff=['rule']):
         """
         Initialize the extractor, storing the extractors types and backoff extractor types.
         Args:
@@ -47,18 +47,18 @@ class NameExtractor(Extractor):
             text (str): the text to extract from.
             preprocess(bool): True if needed preprocessing
         Returns:
-            List(str): the list of extraction or the empty list if there are no matches.
+            List(str): the list of entities or the empty list if there are no matches.
         """
-        extractions = []
+        results = []
         if preprocess:
             text = self.preprocess(text)
         for ext in self.primary:
-            extractions.extend(ext.extract(text))
-        # if extractors fail to extract names, use the back off extractors
-        if extractions==[]:
+            results.extend(ext.extract(text))
+        # if the primary extractors fail to extract names, use the back off extractors
+        if results==[]:
             for ext in self.backoff:
-                extractions.extend(ext.extract(text))
-        return list(set(extractions))
+                results.extend(ext.extract(text))
+        return list(set(results))
 
     
     def preprocess(self, text):
