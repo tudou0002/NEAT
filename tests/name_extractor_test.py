@@ -1,6 +1,7 @@
 import unittest
 import numpy as np
 from extractors.name_extractor import NameExtractor
+from extractors.entity import Entity
 
 class TestNameExtractor(unittest.TestCase):
 
@@ -8,11 +9,14 @@ class TestNameExtractor(unittest.TestCase):
         self.extractor = NameExtractor()
 
     def test_basic(self):
-        # names are in the dictionary
+        # two names are in the dictionary
         text = 'My name is vivian bella.'
         extractions = self.extractor.extract(text)
 
-        expected = ['vivian','bella']
+        entity_1 = Entity('vivian', 11)
+        entity_2 = Entity('bella', 18)
+        expected = [entity_1, entity_2]
+        print(extractions)
         self.assertCountEqual(extractions, expected)
 
     def test_rule(self):
@@ -20,7 +24,7 @@ class TestNameExtractor(unittest.TestCase):
         text = 'My name is Hazel.'
         extractions = self.extractor.extract(text)
 
-        expected = ['hazel']
+        expected = [Entity('Hazel', 11)]
         self.assertCountEqual(extractions, expected)
 
 
