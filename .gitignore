@@ -2,4 +2,4 @@
 ne/
 *.ipynb
 *.pyc
-__pychache__
+__pychache__/
