@@ -1,0 +1,4 @@
+# ignore the virtual env
+ne/
+*.ipynb
+*.pyc
