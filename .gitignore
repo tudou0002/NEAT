@@ -3,3 +3,4 @@ ne/
 *.ipynb
 *.pyc
 __pychache__/
+*.egg-info/
