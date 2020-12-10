@@ -10,7 +10,11 @@ def apply_lit(input):
   if input == 'set()':
     return set()
   else:
-    return set(ast.literal_eval(input))
+    try:
+      return set(ast.literal_eval(input))
+    except:
+      # TJBatch extractor results need to be split using the ; delimiter
+      return set(input.split(';'))
 
 def Containment_IoU(input1, input2): # pred, true
   intersect_count = 0
