@@ -16,7 +16,7 @@ def apply_lit(input):
       # TJBatch extractor results need to be split using the ; delimiter
       return set(input.split(';'))
 
-def Containment_IoU(input1, input2):
+def Containment_IoU(input1, input2): # pred, true
   intersect_count = 0
   union_count = 0
 
@@ -62,10 +62,7 @@ def Containment_IoU(input1, input2):
 
   return mod_IoU
 
-Containment_IoU = np.vectorize(Containment_IoU)
-
-
-def Exact_Set(input1, input2):
+def Exact_Set(input1, input2): # pred, true
 
   input1 = set(input1)
   input2 = set(input2)
@@ -75,7 +72,28 @@ def Exact_Set(input1, input2):
   else:
     return 0
 
+def Exact_F1(pred, true):
+  pred = set(pred)
+  true = set(true)
+  
+  tp = 0
+  fp = 0
+  fn = 0
+
+  for i in pred:
+    if i in true:
+      tp += 1
+    else:
+      fp += 1
+  for i in true:
+    if i not in pred:
+      fn += 1
+
+  return tp, fp, fn
+
+Containment_IoU = np.vectorize(Containment_IoU)
 Exact_Set = np.vectorize(Exact_Set)
+Exact_F1 = np.vectorize(Exact_F1)
 
 
 if __name__ == '__main__':
@@ -85,13 +103,9 @@ if __name__ == '__main__':
     parser.add_argument('-pc', type=str, default='result', help='prediction column name')
     parser.add_argument('-t', type=str, default='./data/Crowd_Majority_and_others.tsv', help='ground truth filepath')
     parser.add_argument('-tc', type=str, default='Crowd_Majority', help='ground truth column name')
-    parser.add_argument('--mode', type=str, default='Containment_IoU', help='how to do comparison. Choices: Containment_IoU, Exact_Set')
 
     args = parser.parse_args()
 
-    if args.mode not in ['Containment_IoU','Exact_Set']:
-      print('Mode not recognized')
-      exit()
 
     pred_df = pd.read_csv(args.p, sep='\t')
     true_df = pd.read_csv(args.t, sep='\t')
@@ -126,9 +140,22 @@ if __name__ == '__main__':
       pred_col = pred_col.apply(apply_lit)
       true_col = true_col.apply(apply_lit)
 
-    if args.mode == 'Containment_IoU':
-      comparison = Containment_IoU(pred_col, true_col)
-      print(np.mean(comparison))
-    elif args.mode == 'Exact_Set':
-      comparison = Exact_Set(pred_col, true_col)
-      print(np.mean(comparison))
+    
+    comparison = Containment_IoU(pred_col, true_col)
+    print('Containment IoU:', np.mean(comparison))
+    comparison = Exact_Set(pred_col, true_col)
+    print('Full set exact match accuracy:', np.mean(comparison))
+
+
+    comparison = Exact_F1(pred_col, true_col)
+    tp = np.sum(comparison[0])
+    fp = np.sum(comparison[1])
+    fn = np.sum(comparison[2])
+    
+    avg_precision = tp / (tp + fp)
+    avg_recall = tp / (tp + fn)
+    avg_f1 =  2 * (avg_precision * avg_recall) / (avg_precision + avg_recall)
+
+    print('Individual exact match precision:', np.mean(avg_precision))
+    print('Individual exact match recall:', np.mean(avg_recall))
+    print('Individual exact match F1:', np.mean(avg_f1))
