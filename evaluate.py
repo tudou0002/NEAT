@@ -14,6 +14,8 @@ def apply_lit(input):
       return set(ast.literal_eval(input))
     except:
       # TJBatch extractor results need to be split using the ; delimiter
+      if pd.isna(input): # THESE ARE THE LINES ADDED
+        return [] # THESE ARE THE LINES ADDED
       return set(input.split(';'))
 
 def Containment_IoU(input1, input2): # pred, true
