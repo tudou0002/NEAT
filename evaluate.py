@@ -16,6 +16,9 @@ def apply_lit(input):
       # TJBatch extractor results need to be split using the ; delimiter
       return set(input.split(';'))
 
+def apply_lower(input):
+  return set([x.lower() for x in list(input)])
+
 def Containment_IoU(input1, input2): # pred, true
   intersect_count = 0
   union_count = 0
@@ -135,6 +138,10 @@ if __name__ == '__main__':
       pred_col = merged_df[args.pc]
       true_col = merged_df[args.tc]
 
+      # lowercase
+      pred_col = merged_df[pc].apply(apply_lower)
+      true_col = merged_df[tc].apply(apply_lower)
+
     else: # no id, so assume entries are aligned
       pred_col = pred_df[args.pc]
       true_col = true_df[args.tc]
@@ -145,9 +152,9 @@ if __name__ == '__main__':
       true_col = true_col[true_col != '']
       true_col = true_col[~true_col.isna()]
 
-      # convert strings to lists
-      pred_col = pred_col.apply(apply_lit)
-      true_col = true_col.apply(apply_lit)
+      # convert strings to lists and lowercase
+      pred_col = pred_col.apply(apply_lit).apply(apply_lower)
+      true_col = true_col.apply(apply_lit).apply(apply_lower)
 
     empty_match = check_empty(pred_col, true_col)
     non_empty_pred_col = pred_col[~empty_match]
