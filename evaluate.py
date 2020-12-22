@@ -63,7 +63,6 @@ def Containment_IoU(input1, input2): # pred, true
   return mod_IoU
 
 def Exact_Set(input1, input2): # pred, true
-
   input1 = set(input1)
   input2 = set(input2)
 
@@ -91,9 +90,19 @@ def Exact_F1(pred, true):
 
   return tp, fp, fn
 
+def check_empty(input1, input2):
+  input1 = set(input1)
+  input2 = set(input2)
+
+  if input1 == input2 and input1 == set():
+    return True
+  else:
+    return False
+
 Containment_IoU = np.vectorize(Containment_IoU)
 Exact_Set = np.vectorize(Exact_Set)
 Exact_F1 = np.vectorize(Exact_F1)
+check_empty = np.vectorize(check_empty)
 
 
 if __name__ == '__main__':
@@ -140,11 +149,18 @@ if __name__ == '__main__':
       pred_col = pred_col.apply(apply_lit)
       true_col = true_col.apply(apply_lit)
 
-    
+    empty_match = check_empty(pred_col, true_col)
+    non_empty_pred_col = pred_col[~empty_match]
+    non_empty_true_col = true_col[~empty_match]
+
     comparison = Containment_IoU(pred_col, true_col)
     print('Containment IoU:', np.mean(comparison))
+    comparison = Containment_IoU(non_empty_pred_col, non_empty_true_col)
+    print('Containment IoU, empty matches excluded:', np.mean(comparison))
     comparison = Exact_Set(pred_col, true_col)
-    print('Full set exact match accuracy:', np.mean(comparison))
+    print('Full set strict match accuracy:', np.mean(comparison))
+    comparison = Exact_Set(non_empty_pred_col, non_empty_true_col)
+    print('Full set strict match accuracy, empty matches excluded:', np.mean(comparison))
 
 
     comparison = Exact_F1(pred_col, true_col)
@@ -156,6 +172,6 @@ if __name__ == '__main__':
     avg_recall = tp / (tp + fn)
     avg_f1 =  2 * (avg_precision * avg_recall) / (avg_precision + avg_recall)
 
-    print('Individual exact match precision:', np.mean(avg_precision))
-    print('Individual exact match recall:', np.mean(avg_recall))
-    print('Individual exact match F1:', np.mean(avg_f1))
+    print('Individual strict match precision:', np.mean(avg_precision))
+    print('Individual strict match recall:', np.mean(avg_recall))
+    print('Individual strict match F1:', np.mean(avg_f1))
