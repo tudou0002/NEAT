@@ -135,12 +135,9 @@ if __name__ == '__main__':
       merged_df[args.pc] = merged_df[args.pc].apply(apply_lit)
       merged_df[args.tc] = merged_df[args.tc].apply(apply_lit)
 
-      pred_col = merged_df[args.pc]
-      true_col = merged_df[args.tc]
-
       # lowercase
-      pred_col = merged_df[pc].apply(apply_lower)
-      true_col = merged_df[tc].apply(apply_lower)
+      pred_col = merged_df[args.pc].apply(apply_lower)
+      true_col = merged_df[args.tc].apply(apply_lower)
 
     else: # no id, so assume entries are aligned
       pred_col = pred_df[args.pc]
