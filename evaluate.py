@@ -92,7 +92,36 @@ def Exact_F1(pred, true):
       fn += 1
 
   return tp, fp, fn
+  
+def Partial_F1(pred, true):
+  pred = set(pred)
+  true = set(true)
+  
+  tp = 0
+  fp = 0
+  fn = 0
 
+  for i in pred:
+    tp_flag = 0
+    for j in true:
+      if i in j or j in i:
+        tp_flag = 1
+        break
+    if tp_flag == 1:
+      tp += 1
+    else:
+      fp += 1
+  for i in true:
+    fn_flag = 1
+    for j in pred:
+      if i in j or j in i:
+        fn_flag = 0
+        break
+    if fn_flag == 1:
+      fn += 1
+
+  return tp, fp, fn
+  
 def check_empty(input1, input2):
   input1 = set(input1)
   input2 = set(input2)
@@ -105,6 +134,7 @@ def check_empty(input1, input2):
 Containment_IoU = np.vectorize(Containment_IoU)
 Exact_Set = np.vectorize(Exact_Set)
 Exact_F1 = np.vectorize(Exact_F1)
+Partial_F1 = np.vectorize(Partial_F1)
 check_empty = np.vectorize(check_empty)
 
 
@@ -179,3 +209,17 @@ if __name__ == '__main__':
     print('Individual strict match precision:', np.mean(avg_precision))
     print('Individual strict match recall:', np.mean(avg_recall))
     print('Individual strict match F1:', np.mean(avg_f1))
+
+    
+    comparison = Partial_F1(pred_col, true_col)
+    tp = np.sum(comparison[0])
+    fp = np.sum(comparison[1])
+    fn = np.sum(comparison[2])
+    
+    avg_precision = tp / (tp + fp)
+    avg_recall = tp / (tp + fn)
+    avg_f1 =  2 * (avg_precision * avg_recall) / (avg_precision + avg_recall)
+
+    print('Individual partial match precision:', np.mean(avg_precision))
+    print('Individual partial match recall:', np.mean(avg_recall))
+    print('Individual partial match F1:', np.mean(avg_f1))
