@@ -14,8 +14,6 @@ def apply_lit(input):
       return set(ast.literal_eval(input))
     except:
       # TJBatch extractor results need to be split using the ; delimiter
-      if pd.isna(input): # THESE ARE THE LINES ADDED
-        return [] # THESE ARE THE LINES ADDED
       return set(input.split(';'))
 
 def apply_lower(input):
@@ -68,7 +66,6 @@ def Containment_IoU(input1, input2): # pred, true
   return mod_IoU
 
 def Exact_Set(input1, input2): # pred, true
-
   input1 = set(input1)
   input2 = set(input2)
 
@@ -95,10 +92,50 @@ def Exact_F1(pred, true):
       fn += 1
 
   return tp, fp, fn
+  
+def Partial_F1(pred, true):
+  pred = set(pred)
+  true = set(true)
+  
+  tp = 0
+  fp = 0
+  fn = 0
+
+  for i in pred:
+    tp_flag = 0
+    for j in true:
+      if i in j or j in i:
+        tp_flag = 1
+        break
+    if tp_flag == 1:
+      tp += 1
+    else:
+      fp += 1
+  for i in true:
+    fn_flag = 1
+    for j in pred:
+      if i in j or j in i:
+        fn_flag = 0
+        break
+    if fn_flag == 1:
+      fn += 1
+
+  return tp, fp, fn
+  
+def check_empty(input1, input2):
+  input1 = set(input1)
+  input2 = set(input2)
+
+  if input1 == input2 and input1 == set():
+    return True
+  else:
+    return False
 
 Containment_IoU = np.vectorize(Containment_IoU)
 Exact_Set = np.vectorize(Exact_Set)
 Exact_F1 = np.vectorize(Exact_F1)
+Partial_F1 = np.vectorize(Partial_F1)
+check_empty = np.vectorize(check_empty)
 
 
 if __name__ == '__main__':
@@ -128,9 +165,6 @@ if __name__ == '__main__':
       merged_df[args.pc] = merged_df[args.pc].apply(apply_lit)
       merged_df[args.tc] = merged_df[args.tc].apply(apply_lit)
 
-      pred_col = merged_df[args.pc]
-      true_col = merged_df[args.tc]
-      
       # lowercase
       pred_col = merged_df[args.pc].apply(apply_lower)
       true_col = merged_df[args.tc].apply(apply_lower)
@@ -149,11 +183,18 @@ if __name__ == '__main__':
       pred_col = pred_col.apply(apply_lit).apply(apply_lower)
       true_col = true_col.apply(apply_lit).apply(apply_lower)
 
-    
+    empty_match = check_empty(pred_col, true_col)
+    non_empty_pred_col = pred_col[~empty_match]
+    non_empty_true_col = true_col[~empty_match]
+
     comparison = Containment_IoU(pred_col, true_col)
     print('Containment IoU:', np.mean(comparison))
+    comparison = Containment_IoU(non_empty_pred_col, non_empty_true_col)
+    print('Containment IoU, empty matches excluded:', np.mean(comparison))
     comparison = Exact_Set(pred_col, true_col)
-    print('Full set exact match accuracy:', np.mean(comparison))
+    print('Full set strict match accuracy:', np.mean(comparison))
+    comparison = Exact_Set(non_empty_pred_col, non_empty_true_col)
+    print('Full set strict match accuracy, empty matches excluded:', np.mean(comparison))
 
 
     comparison = Exact_F1(pred_col, true_col)
@@ -165,6 +206,20 @@ if __name__ == '__main__':
     avg_recall = tp / (tp + fn)
     avg_f1 =  2 * (avg_precision * avg_recall) / (avg_precision + avg_recall)
 
-    print('Individual exact match precision:', np.mean(avg_precision))
-    print('Individual exact match recall:', np.mean(avg_recall))
-    print('Individual exact match F1:', np.mean(avg_f1))
+    print('Individual strict match precision:', np.mean(avg_precision))
+    print('Individual strict match recall:', np.mean(avg_recall))
+    print('Individual strict match F1:', np.mean(avg_f1))
+
+    
+    comparison = Partial_F1(pred_col, true_col)
+    tp = np.sum(comparison[0])
+    fp = np.sum(comparison[1])
+    fn = np.sum(comparison[2])
+    
+    avg_precision = tp / (tp + fp)
+    avg_recall = tp / (tp + fn)
+    avg_f1 =  2 * (avg_precision * avg_recall) / (avg_precision + avg_recall)
+
+    print('Individual partial match precision:', np.mean(avg_precision))
+    print('Individual partial match recall:', np.mean(avg_recall))
+    print('Individual partial match F1:', np.mean(avg_f1))
