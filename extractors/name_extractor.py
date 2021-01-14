@@ -3,9 +3,10 @@ from extractors.rule_extractor import RuleExtractor
 from extractors.crf_extractor import CRFExtractor
 from extractors.extractor import Extractor
 import re, unicodedata
+from extractors.filter import *
 
 class NameExtractor(Extractor):
-    def __init__(self, primary=['dict'],backoff=['rule']):
+    def __init__(self, primary=['dict'],backoff=['rule'],w1=0.5,w2=0.5, threshold=0.3):
         """
         Initialize the extractor, storing the extractors types and backoff extractor types.
         Args:
@@ -16,6 +17,10 @@ class NameExtractor(Extractor):
         """
         self.primary = self.initialize_extractors(primary)
         self.backoff = self.initialize_extractors(backoff)
+        self.fillMaskFilter = FillMaskFilter()
+        self.w1 = w1
+        self.w2 = w2
+        self.threshold = threshold
 
     
     def initialize_extractors(self, extractor_type:list):
@@ -58,6 +63,16 @@ class NameExtractor(Extractor):
         if results==[]:
             for ext in self.backoff:
                 results.extend(ext.extract(text))
+        results_text = [result.text for result in results]
+        filtered_results = self.fillMaskFilter.disambiguate_layer(text, results_text)
+
+        # add the disambiguated ratio
+        for result, filtered in zip(results, filtered_results):
+            result.context_confidence = filtered['ratio']
+            result.confidence = self.w1*result.confidence + self.w2*result.context_confidence
+            if result.confidence < self.threshold:
+                results - result
+
         return list(set(results))
 
     
