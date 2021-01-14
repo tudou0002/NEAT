@@ -1,6 +1,6 @@
 
 class Entity:
-    def __init__(self, text: str, begin_offset: int, score=-1.0):
+    def __init__(self, text: str, begin_offset: int, type):
         """Construct an entity object.
 
         text: the plain text of this entity.
@@ -10,9 +10,12 @@ class Entity:
 
         """
         self.text = text
-        self.score = score
+        # self.score = score
         self.begin_offset = begin_offset
         self.end_offset = begin_offset + len(text)
+        self.type = type
+        self.context_confidence = 0
+        self.confidence = 0
 
     def __len__(self):
         """The number of unicode characters in the entity, i.e. `entity.text`.
@@ -30,3 +33,6 @@ class Entity:
 
     def __hash__(self):
         return hash((self.text, self.begin_offset))
+
+    def __str__(self):
+        return 'text: '+ self.text + 'confidence: ' + self.confidence

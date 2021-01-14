@@ -9,7 +9,8 @@ class RuleExtractor(Extractor):
         Extractor.__init__(self)
         self.patterns = self.define_patterns()
         self.matcher = self.create_matcher(self.patterns)
-        self.embedding = FasttextEmbeddings()
+        # self.embedding = FasttextEmbeddings()
+        self.type = 'rule'
         
     def create_matcher(self,  patterns):
         matcher = Matcher(self.nlp.vocab)
@@ -53,7 +54,8 @@ class RuleExtractor(Extractor):
             else:
                 name_start = start + 1
             span = doc[name_start:end] 
-            ent = Entity(span.text,span.start)
-            ent.score = self.embedding.get_certainty(ent.text)
+            ent = Entity(span.text,span.start, self.type)
+            # ent.score = self.embedding.get_certainty(ent.text)
+            ent.confidence = 0.4
             result.append(ent)
         return result

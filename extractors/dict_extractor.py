@@ -12,7 +12,8 @@ class DictionaryExtractor(Extractor):
         Extractor.__init__(self)
         self.terms = self.load_word_dict(dict_file)
         self.matcher = self.create_matcher()
-        self.embedding = FasttextEmbeddings()
+        # self.embedding = FasttextEmbeddings()
+        self.type = 'dict'
 
 
     def load_word_dict(self,dict_file): 
@@ -35,7 +36,8 @@ class DictionaryExtractor(Extractor):
         result = []
         for match_id, start, end in matches:
             span = doc[start:end]
-            ent = Entity(span.text,span.start)
-            ent.score = self.embedding.get_certainty(ent.text)
+            ent = Entity(span.text,span.start, self.type)
+            # ent.score = self.embedding.get_certainty(ent.text)
             result.append(ent)
+            ent.confidence = 0.6
         return result
