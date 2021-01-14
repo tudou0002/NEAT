@@ -70,8 +70,6 @@ class NameExtractor(Extractor):
         for result, filtered in zip(results, filtered_results):
             result.context_confidence = filtered['ratio']
             result.confidence = self.w1*result.confidence + self.w2*result.context_confidence
-            if result.confidence < self.threshold:
-                results - result
 
         return list(set(results))
 
