@@ -5,8 +5,8 @@ from extractors.entity import Entity
 from extractors.embeddings.fasttext import FasttextEmbeddings
 
 class RuleExtractor(Extractor):
-    def __init__(self):
-        Extractor.__init__(self)
+    def __init__(self, model='en_core_web_sm'):
+        Extractor.__init__(self, model)
         self.patterns = self.define_patterns()
         self.matcher = self.create_matcher(self.patterns)
         # self.embedding = FasttextEmbeddings()
@@ -14,8 +14,8 @@ class RuleExtractor(Extractor):
         
     def create_matcher(self,  patterns):
         matcher = Matcher(self.nlp.vocab)
-        matcher.add('thirdMatch', None, *self.patterns[0])
-        matcher.add('secondMatch', None, *self.patterns[1])
+        matcher.add('thirdMatch',  self.patterns[0])
+        matcher.add('secondMatch',  self.patterns[1])
         return matcher
     
     def define_patterns(self):

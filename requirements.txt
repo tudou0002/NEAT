@@ -1,4 +1,4 @@
-spacy==2.2.4
+spacy==3.0.1
 pandas==1.0.1
 joblib==0.14.1
 numpy==1.18.1

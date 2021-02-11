@@ -5,8 +5,8 @@ class Extractor(object):
     All extractors extend this abstract class.
     """
 
-    def __init__(self):
-        self.nlp = spacy.load("en_core_web_sm")
+    def __init__(self, model='en_core_web_sm'):
+        self.nlp = spacy.load(model)
 
 
     def extract(self, *input_value, **configs):
