@@ -4,3 +4,13 @@ ne/
 *.pyc
 __pychache__/
 *.egg-info/
+data/CanadaMax80_results.csv
+data/CanadaMax80_results_final.tsv
+data/Crowdsource_data_final_test.csv
+data/Crowdsource_data_final_train.csv
+data/Crowdsource_data_formatted_test.csv
+data/Crowdsource_data_formatted_train.csv
+data/Crowdsource_with_tags_test.csv
+data/Crowdsource_with_tags_train.csv
+data/custom_ht_test_data.csv
+data/custom_ht_train_data.csv

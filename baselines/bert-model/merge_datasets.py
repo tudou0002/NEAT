@@ -4,6 +4,7 @@ import argparse
 from datasets import load_dataset
 import ast
 import pandas as pd
+import numpy as np
 
 from tqdm import tqdm
 
@@ -39,7 +40,7 @@ html_parser = HTMLParser()
 def string_to_list(input):
 	# function to convert a string of a list to a list
 	if type(input) == list or input is None:
-		return input
+		return ['']
 	new_list = []
 	for item in input.split(','):
 		if item == 'set()':
@@ -65,24 +66,25 @@ def string_to_list(input):
 					it = it[:]
 		else:
 			it = item[1:-1]
-			#print(it)
+			if it[0] == "'" or it[0] == '"':
+					it = it[1:-1]
+			else:
+					it = it[:]
 		new_list.append(it)
 	return new_list
 
 def apply_mapping(x):
-	tag_correction_map = {'0':'0','I-PER':'I-PER','B-PER':'B-PER','1':'B-PER', '2':'I-PER', '3':'B-ORG', '4':'I-ORG', \
-	'5':'B-LOC','6':"I-LOC",'7':"B-MISC",'8':"I-MISC"}
+	tag_correction_map = {'0':'0', 0:'0', 'I-PER':'I-PER','B-PER':'B-PER',1:'B-PER', 2:'I-PER', 3:'B-ORG', 4:'I-ORG', \
+	5:'B-LOC',6:"I-LOC",7:"B-MISC",8:"I-MISC", '':'0'}
+
+	# if x != 0 and x != '0' and x != 1 and x != 2 and x !='I-PER' and x != 'B-PER':
+	# 	print(x)
+	# 	#count += 1
 
 	return tag_correction_map[x]
 
-def merge(data_file_path, conll):
+def merge(conll, custom_train, custom_test):
 	# merges the custom HT dataset with the conll for downstream NER
-	#name_splits = data_file_path.split('_')
-	#file_prefix = name_splits[0] + "_" + name_splits[1] + "_" + name_splits[2] + "_"
-	train_file_name = data_file_path + "_train.csv"
-	test_file_name = data_file_path + "_test.csv"
-	custom_train = pd.read_csv(train_file_name)
-	custom_test = pd.read_csv(test_file_name)
 
 	for id, item in enumerate(conll['train']['tokens'][:tr_size]):
 		custom_train = custom_train.append({'tokens':item, 'ner_tags':conll['train']['ner_tags'][id]}, ignore_index=True)
@@ -92,6 +94,7 @@ def merge(data_file_path, conll):
 
 	print(custom_train.shape)
 	print(custom_test.shape)
+
 	return custom_train, custom_test
 
 
@@ -105,32 +108,10 @@ def load_conll():
 		new_conll['train']['tokens'][id] = conll['train']['tokens'][id]
 		new_conll['train']['ner_tags'][id] = item
 
-		for i, x in enumerate(item):
-			if x == 1:
-				new_list.append('PER')
-			elif x == 2:
-				new_list.append('PER')
-			else:
-				new_list.append('0')
-
-		#new_conll['train']['ner_tags'][id] = new_list
-
 	for id, item in tqdm(enumerate(conll['test']['ner_tags'][:test_size])):
 		new_list = []
 		new_conll['test']['tokens'][id] = conll['test']['tokens'][id]
 		new_conll['test']['tokens'][id] = item
-
-		for i, x in enumerate(item):
-			if x == 1:
-				new_list.append('PER')
-			elif x == 2:
-				new_list.append('PER')
-			else:
-				new_list.append('0')
-		#new_conll['test']['ner_tags'][id] = new_list
-
-	# print(conll['train']['tokens'][5])
-	# print(conll['train']['ner_tags'][5])
 	return new_conll
 
 
@@ -186,11 +167,22 @@ def standardize_text(text):
 def standardize_punctuation(text):
 	return ''.join([unidecode.unidecode(t) if unicodedata.category(t)[0] == 'P' else t for t in text])
 
+def is_word_in_list(word, list_of_names):
+	if word in list_of_names:
+		return True
+	for name in list_of_names:
+		if (word in name.lower()) and len(word) > 2:
+			return True
+	return False
+
+
 def get_tags_in_format(list_of_text, list_of_names, filename):
 	all_words = []
 	all_tags = []
 	all_ids = []
-	#print(list_of_names[29])
+	c = 0
+	list_of_names = [list(map(lambda x: x.lower(), names)) for names in list_of_names]
+	check = {}
 	for id, text in enumerate(list_of_text):
 		split_by_comma = text.split(',') # we have to do this as some names appear just before a comma without /
 										# spaces and we will miss those
@@ -199,42 +191,50 @@ def get_tags_in_format(list_of_text, list_of_names, filename):
 		all_ids.append(str(id))
 		for txt in split_by_comma: # splitting again by spaces. So essentially splitting by both comma & space
 			words_in_text.extend(txt.split())
-		#print(type(list_of_names[id]))
+
+		text = text.replace(',',' ')
+		text = text.replace('.',' ')
+		text = text.replace('/',' ')
+		text = text.replace('*',' ')
+		text = text.replace('(',' ')
+		text = text.replace(')',' ')
+		text = text.replace(':',' ')
+		text = text.replace('-',' ')
+		text = text.replace('!',' ')
+
+		words_in_text = text.split()
+
+		if len(list_of_names[id]) == 1 and (list_of_names[id][0] == '' or list_of_names[id][0] == ']'):
+			check[id] = True
+
 		for word in words_in_text:
-			#print(word, list_of_names[id], id)
-			w = word.lower()
-			if w in list_of_names[id] or w == list_of_names[id][0][:-1] and len(w) > 1:
+			w = word.lower().strip()
+			if len(list_of_names[id]) == 1 and (list_of_names[id][0] == '' or list_of_names[id][0] == ']'):
+				tag = 0
+			elif is_word_in_list(w, list_of_names[id]):
 				if w in words_in_text[:3]: # tag is B-PER
 					tag = "B-PER"
 				else:
 					tag = "I-PER"
-				print(word, list_of_names[id], id)
-				# #tag = list_of_tags[id]
-				# if list_of_tags[id] == 'I-PER':
-				#     tag = 1
-				# else:
-				#     tag = 2
+				check[id] = True
 			else:
 				tag = 0
 			tags.append(tag)
 		
 		all_words.append(words_in_text)
 		all_tags.append(tags)
-		
+
 	new_data = {'id':all_ids, 'tokens':all_words, 'ner_tags':all_tags}
-	#test_data = {'id':all_ids[tr_size+1:], 'tokens':all_words[tr_size+1:], 'ner_tags':all_tags[tr_size+1]}
 	df = pd.DataFrame(new_data)
-	#test_df = pd.DataFrame(test_data)
 	df.to_csv(filename)
-	#test_df.to_csv(filename+"_test.csv")
-	#return train_df, test_df
+	print("Count = " + str(len(check)))
 	return df
 
 def load_custom_data(train_data_file, test_data_file, train_desc_column, test_desc_column, train_tag_column, test_tag_column):
 
 	train_data = pd.read_csv(train_data_file, sep='\t')
 	test_data = pd.read_csv(test_data_file, sep='\t')
-	print(train_data[train_tag_column].iloc[90])
+
 	train_data['processed_text'] = train_data[train_desc_column].apply(lambda x: preprocess_bert(x))
 	train_data[train_tag_column] = train_data[train_tag_column].apply(lambda x: string_to_list(x))
 
@@ -243,9 +243,8 @@ def load_custom_data(train_data_file, test_data_file, train_desc_column, test_de
 
 	new_data_train = get_tags_in_format(train_data['processed_text'], train_data[train_tag_column], "/home/pnair6/McGill/Research/HT/NER/bert_ner_fine_tune/data_feb18/ht_formatted_data_train.csv")
 	new_data_test = get_tags_in_format(test_data['processed_text'], test_data[test_tag_column], "/home/pnair6/McGill/Research/HT/NER/bert_ner_fine_tune/data_feb18/ht_formatted_data_test.csv")
+	
 	return new_data_train, new_data_test
-	# data[[desc_column, tag_column]].to_csv(data_file.split('/')[-1])
-	# return data[[desc_column, tag_column]]
 
 def csv_to_txt(train, test):
 
@@ -254,32 +253,50 @@ def csv_to_txt(train, test):
 
 	id_to_tag_map = {'0':'0', '1':'B-PER', '2':'I-PER'}
 
-	train['tokens'] = train['tokens'].apply(lambda x: string_to_list(x))
-	test['tokens'] = test['tokens'].apply(lambda x: string_to_list(x))
-
-	print(train.iloc[284]['ner_tags'])
-
-	train['ner_tags'] = train['ner_tags'].apply(lambda x: string_to_list(x))
-	test['ner_tags'] = test['ner_tags'].apply(lambda x: string_to_list(x))
-
 	print(train.shape)
 	print(test.shape)
 
 	for id, row in tqdm(train.iterrows()):
-		for i, tok in enumerate(row['tokens']):
+		tokens = row['tokens']
+		tags = row['ner_tags']
+
+		for i, tok in enumerate(tokens):
+			if len(tok) == 0:
+				continue
 			try:
-				new_train.write(tok + " NULL " + apply_mapping(row['ner_tags'][i]) + "\n")
+				tag = apply_mapping(tags[i])
 			except:
-				new_train.write(tok + " NULL " + apply_mapping(row['ner_tags'][i][:-1]) + "\n")
+				tag = apply_mapping(tags[i][:-1])
+			if ',' in tok or ',' in tag:
+				print(tok)
+				print(tag)
+			else:
+				new_train.write(tok + " " + str(tag) + "\n")
 		new_train.write("\n")
 
 	for id, row in tqdm(test.iterrows()):
-		for i, tok in enumerate(row['tokens']):
-			new_test.write(tok + " NULL " + apply_mapping(row['ner_tags'][i]) + "\n")
+		tokens = row['tokens']
+		tags = row['ner_tags']
+
+		for i, tok in enumerate(tokens):
+			if tags is None:
+				continue
+			tag = apply_mapping(tags[i])
+			if ',' in tok or ',' in tag:
+				print(tok)
+				print(tag)
+			else:
+				new_test.write(str(tok) + " " + str(tag) + "\n")
 		new_test.write("\n")
 
 	new_train.close()
 	new_test.close()
+
+	#train = pd.read_csv("/home/pnair6/McGill/Research/HT/NER/bert_ner_fine_tune/data_feb18/train.txt")
+	#test = pd.read_csv("/home/pnair6/McGill/Research/HT/NER/bert_ner_fine_tune/data_feb18/test.txt")
+
+	#train.to_csv("/home/pnair6/McGill/Research/HT/NER/bert_ner_fine_tune/data_feb18/train.csv", index=False)
+	#test.to_csv("/home/pnair6/McGill/Research/HT/NER/bert_ner_fine_tune/data_feb18/test.csv", index=False)
 
 if __name__ == '__main__':
 
@@ -296,14 +313,8 @@ if __name__ == '__main__':
 	args = parser.parse_args()
 
 	data_train, data_test = load_custom_data(args.train_data, args.test_data, args.train_dc, args.test_dc, args.train_tc, args.test_tc)
-	#print(data_train.head())
-	exit()
 	conll = load_conll()
-	new_train, new_test = merge("/home/pnair6/McGill/Research/HT/NER/bert_ner_fine_tune/data_feb18/ht_formatted_data", conll)
-
-	# new_train.to_csv("custom_ht_train_data.csv")
-	# new_test.to_csv("custom_ht_test_data.csv")
-	#new_train = pd.read_csv("conll_ht_train_data.csv")
-	#new_test = pd.read_csv("conll_ht_test_data.csv")
+	# "/home/pnair6/McGill/Research/HT/NER/bert_ner_fine_tune/data_feb18/ht_formatted_data"
+	new_train, new_test = merge(conll, data_train, data_test)
 
 	csv_to_txt(new_train, new_test)
