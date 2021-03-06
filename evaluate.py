@@ -7,13 +7,14 @@ import ast
 import copy
 
 def apply_lit(input):
-  if input == 'set()':
+  if input == 'set()' or pd.isna(input):
     return set()
   else:
     try:
       return set(ast.literal_eval(input))
     except:
       # TJBatch extractor results need to be split using the ; delimiter
+      #print(input)
       return set(input.split(';'))
 
 def apply_lower(input):
