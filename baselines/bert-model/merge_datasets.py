@@ -230,31 +230,35 @@ def get_tags_in_format(list_of_text, list_of_names, filename):
 	print("Count = " + str(len(check)))
 	return df
 
-def load_custom_data(train_data_file, test_data_file, train_desc_column, test_desc_column, train_tag_column, test_tag_column):
+def load_custom_data(train_data_file, test_data_file, train_desc_column, test_desc_column, train_tag_column, test_tag_column, split):
 
 	train_data = pd.read_csv(train_data_file, sep='\t')
-	test_data = pd.read_csv(test_data_file, sep='\t')
-
 	train_data['processed_text'] = train_data[train_desc_column].apply(lambda x: preprocess_bert(x))
 	train_data[train_tag_column] = train_data[train_tag_column].apply(lambda x: string_to_list(x))
-
-	test_data['processed_text'] = test_data[test_desc_column].apply(lambda x: preprocess_bert(x))
-	test_data[test_tag_column] = test_data[test_tag_column].apply(lambda x: string_to_list(x))
-
 	new_data_train = get_tags_in_format(train_data['processed_text'], train_data[train_tag_column], "/home/pnair6/McGill/Research/HT/NER/bert_ner_fine_tune/data_feb18/ht_formatted_data_train.csv")
-	new_data_test = get_tags_in_format(test_data['processed_text'], test_data[test_tag_column], "/home/pnair6/McGill/Research/HT/NER/bert_ner_fine_tune/data_feb18/ht_formatted_data_test.csv")
+
+	if split:
+		test_data = pd.read_csv(test_data_file, sep='\t')
+		test_data['processed_text'] = test_data[test_desc_column].apply(lambda x: preprocess_bert(x))
+		test_data[test_tag_column] = test_data[test_tag_column].apply(lambda x: string_to_list(x))
+		new_data_test = get_tags_in_format(test_data['processed_text'], test_data[test_tag_column], "/home/pnair6/McGill/Research/HT/NER/bert_ner_fine_tune/data_feb18/ht_formatted_data_test.csv")
 	
-	return new_data_train, new_data_test
+		return new_data_train, new_data_test
 
-def csv_to_txt(train, test):
+	return new_data_train, None
 
-	new_train = open("/home/pnair6/McGill/Research/HT/NER/bert_ner_fine_tune/data_feb18/train.txt", "w")
-	new_test = open("/home/pnair6/McGill/Research/HT/NER/bert_ner_fine_tune/data_feb18/test.txt", "w")
+def csv_to_txt(train, test, train_path, test_path, split):
 
-	id_to_tag_map = {'0':'0', '1':'B-PER', '2':'I-PER'}
-
+	# new_train = open("/home/pnair6/McGill/Research/HT/NER/bert_ner_fine_tune/test_sets/train.txt", "w")
+	new_train = open(train_path, 'w')
 	print(train.shape)
-	print(test.shape)
+
+	if split:
+		# new_test = open("/home/pnair6/McGill/Research/HT/NER/bert_ner_fine_tune/data_feb18/test.txt", "w")
+		new_test = open(test_path, 'w')
+		print(test.shape)
+
+	id_to_tag_map = {'0':'0', '1':'B-PER', '2':'I-PER'}	
 
 	for id, row in tqdm(train.iterrows()):
 		tokens = row['tokens']
@@ -273,24 +277,25 @@ def csv_to_txt(train, test):
 			else:
 				new_train.write(tok + " " + str(tag) + "\n")
 		new_train.write("\n")
-
-	for id, row in tqdm(test.iterrows()):
-		tokens = row['tokens']
-		tags = row['ner_tags']
-
-		for i, tok in enumerate(tokens):
-			if tags is None:
-				continue
-			tag = apply_mapping(tags[i])
-			if ',' in tok or ',' in tag:
-				print(tok)
-				print(tag)
-			else:
-				new_test.write(str(tok) + " " + str(tag) + "\n")
-		new_test.write("\n")
-
 	new_train.close()
-	new_test.close()
+
+	if split:
+		for id, row in tqdm(test.iterrows()):
+			tokens = row['tokens']
+			tags = row['ner_tags']
+
+			for i, tok in enumerate(tokens):
+				if tags is None:
+					continue
+				tag = apply_mapping(tags[i])
+				if ',' in tok or ',' in tag:
+					print(tok)
+					print(tag)
+				else:
+					new_test.write(str(tok) + " " + str(tag) + "\n")
+			new_test.write("\n")
+
+		new_test.close()
 
 	#train = pd.read_csv("/home/pnair6/McGill/Research/HT/NER/bert_ner_fine_tune/data_feb18/train.txt")
 	#test = pd.read_csv("/home/pnair6/McGill/Research/HT/NER/bert_ner_fine_tune/data_feb18/test.txt")
@@ -302,19 +307,37 @@ if __name__ == '__main__':
 
 	parser = argparse.ArgumentParser(description='to do')
 	parser.add_argument('-train_data', type=str, default='../../data/Listcrawler_baseline.tsv', help='filepath of your custom train dataset as csv or tsv')
-	parser.add_argument('-test_data', type=str, default='../../data/CanadaMax80_results.csv', help='filepath of your custom train dataset as csv or tsv')
+	parser.add_argument('-test_data', type=str, default='../../data/CanadaMax80_results.csv', help='filepath of your custom test dataset as csv or tsv')
 
 	parser.add_argument('-train_dc', type=str, default='description', help='name of the description column of train data')
-	parser.add_argument('-train_tc', type=str, default='MTurk_2', help='name of the column of ner tags in required format of train data')
+	parser.add_argument('-train_tc', type=str, default='MTurk_1', help='name of the column of ner tags in required format of train data')
 
 	parser.add_argument('-test_dc', type=str, default='description', help='name of the description column of test data')
 	parser.add_argument('-test_tc', type=str, default='TRUE', help='name of the column of ner tags in required format of test data')
 
+	parser.add_argument('--merge', action="store_true", help='indicates whether to merge with conll or not')
+	parser.add_argument('--split', action='store_true', help='split into train-test or not')
+
 	args = parser.parse_args()
 
-	data_train, data_test = load_custom_data(args.train_data, args.test_data, args.train_dc, args.test_dc, args.train_tc, args.test_tc)
-	conll = load_conll()
-	# "/home/pnair6/McGill/Research/HT/NER/bert_ner_fine_tune/data_feb18/ht_formatted_data"
-	new_train, new_test = merge(conll, data_train, data_test)
+	data_train, data_test = load_custom_data(args.train_data, args.test_data, args.train_dc, args.test_dc, args.train_tc, args.test_tc, args.split)
+	
+	if args.merge:
+		conll = load_conll()
+		# "/home/pnair6/McGill/Research/HT/NER/bert_ner_fine_tune/data_feb18/ht_formatted_data"
+		#new_train, new_test = merge(conll, data_train, data_test)
+		train_path = "/home/pnair6/McGill/Research/HT/NER/bert_ner_fine_tune/test_sets/train.txt"
+		test_path = "/home/pnair6/McGill/Research/HT/NER/bert_ner_fine_tune/data_feb18/test.txt"
+		csv_to_txt(new_train, new_test, train_path, test_path, args.split)		
+	else:
+		new_train, new_test = data_train, data_test
 
-	csv_to_txt(new_train, new_test)
+		train_path = args.train_data[:-3]+"txt"
+
+		if args.split:
+			test_path = args.test_data[:-3]+"txt"
+		else:
+			test_path = ""
+
+		csv_to_txt(new_train, new_test, train_path, test_path, args.split)
+
