@@ -8,8 +8,11 @@ from extractors.embeddings.fasttext import FasttextEmbeddings
 
 class DictionaryExtractor(Extractor):
     def __init__(self,
-                 dict_file='extractors/src/nameslist.csv',
-                 model='en_core_web_sm'):
+                #  dict_file='extractors/src/nameslist.csv',
+                #  model='en_core_web_sm',
+                 **kwargs):
+        model = kwargs.pop('model', 'en_core_web_sm')
+        dict_file = kwargs.pop('dict_file', 'extractors/src/nameslist.csv')
         Extractor.__init__(self, model)
         self.terms = self.load_word_dict(dict_file)
         self.matcher = self.create_matcher()

@@ -6,7 +6,7 @@ import re, unicodedata
 from extractors.filter import *
 
 class NameExtractor(Extractor):
-    def __init__(self, primary=['dict'],backoff=['rule'],w1=0.5,w2=0.5, threshold=0.3):
+    def __init__(self, primary=['dict'],backoff=['rule'],w1=0.5,w2=0.5, threshold=0.3, **kwargs):
         """
         Initialize the extractor, storing the extractors types and backoff extractor types.
         Args:
@@ -15,15 +15,15 @@ class NameExtractor(Extractor):
                 of the primary extractors failed to extract some names.
         Returns:
         """
-        self.primary = self.initialize_extractors(primary)
-        self.backoff = self.initialize_extractors(backoff)
+        self.primary = self.initialize_extractors(primary, **kwargs)
+        self.backoff = self.initialize_extractors(backoff, **kwargs)
         self.fillMaskFilter = FillMaskFilter()
         self.w1 = w1
         self.w2 = w2
         self.threshold = threshold
 
     
-    def initialize_extractors(self, extractor_type:list):
+    def initialize_extractors(self, extractor_type:list, **kwargs):
         """
         Creates the extractors based on the given type
         Args:
@@ -35,11 +35,11 @@ class NameExtractor(Extractor):
         result_extractors = []
         for extractor in extractor_type:
             if extractor == 'dict':
-                result_extractors.append(DictionaryExtractor())
+                result_extractors.append(DictionaryExtractor(**kwargs))
             elif extractor == 'rule':
-                result_extractors.append(RuleExtractor())
+                result_extractors.append(RuleExtractor(**kwargs))
             elif extractor == 'crf':
-                result_extractors.append(CRFExtractor())
+                result_extractors.append(CRFExtractor(**kwargs))
             else:
                 raise NameError("Invalid extractor type! The extractor type input must be 'dict', 'rule' or 'crf'")
 

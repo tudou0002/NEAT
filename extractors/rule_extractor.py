@@ -5,7 +5,8 @@ from extractors.entity import Entity
 from extractors.embeddings.fasttext import FasttextEmbeddings
 
 class RuleExtractor(Extractor):
-    def __init__(self, model='en_core_web_sm'):
+    def __init__(self, **kwargs):
+        model = kwargs.pop('model', 'en_core_web_sm')
         Extractor.__init__(self, model)
         self.patterns = self.define_patterns()
         self.matcher = self.create_matcher(self.patterns)
