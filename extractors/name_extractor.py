@@ -4,6 +4,7 @@ from extractors.crf_extractor import CRFExtractor
 from extractors.extractor import Extractor
 import re, unicodedata
 from extractors.filter import *
+import truecase
 
 class NameExtractor(Extractor):
     def __init__(self, primary=['dict'],backoff=['rule'],w1=0.5,w2=0.5, threshold=0.3, **kwargs):
@@ -141,6 +142,7 @@ class NameExtractor(Extractor):
         text = re.sub(r'[\'·\"”#$%&’()*+/:;<=>@[\]^_`{|}~-]+',' ',text)
         text = re.sub(r'[!,.?]{2,}\s?',' ',text)
         text = re.sub(r'[\s]+',' ',text)
+        text = truecase.get_true_case(text)
         return text
 
 
