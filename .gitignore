@@ -1,2 +1,3 @@
 # ignore the virtual env
 ne/
+extractors/__pycache__/
