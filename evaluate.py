@@ -154,6 +154,7 @@ if __name__ == '__main__':
     true_df = pd.read_csv(args.t, sep='\t')
 
     if 'id' in pred_df.columns and 'id' in true_df.columns:
+    # if False:
       # take columns of interest and merge on id
       pred_df = pred_df[['id',args.pc]]
       true_df = true_df[['id',args.tc]]
@@ -174,6 +175,8 @@ if __name__ == '__main__':
       pred_col = pred_df[args.pc]
       true_col = true_df[args.tc]
 
+      # print(true_col, pred_col)
+
       # only compare where we have a "ground truth"
       pred_col = pred_col[true_col != '']
       pred_col = pred_col[~true_col.isna()]
@@ -188,6 +191,8 @@ if __name__ == '__main__':
     non_empty_pred_col = pred_col[~empty_match]
     non_empty_true_col = true_col[~empty_match]
 
+
+
     comparison = Containment_IoU(pred_col, true_col)
     print('Containment IoU:', np.mean(comparison))
     comparison = Containment_IoU(non_empty_pred_col, non_empty_true_col)
@@ -196,7 +201,6 @@ if __name__ == '__main__':
     print('Full set strict match accuracy:', np.mean(comparison))
     comparison = Exact_Set(non_empty_pred_col, non_empty_true_col)
     print('Full set strict match accuracy, empty matches excluded:', np.mean(comparison))
-
 
     comparison = Exact_F1(pred_col, true_col)
     tp = np.sum(comparison[0])

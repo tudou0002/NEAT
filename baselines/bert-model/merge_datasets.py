@@ -25,7 +25,7 @@ import unidecode
 
 
 
-tr_size = 1000
+tr_size = 500
 test_size = 100
 
 # compile regexes
@@ -85,15 +85,19 @@ def apply_mapping(x):
 
 def merge(conll, custom_train, custom_test):
 	# merges the custom HT dataset with the conll for downstream NER
-
+	# also saves the test sets for conll, the HT data (listcrawler) and the full conll for the sanity-check experiments
+	conll_ids_to_remove = []
 	for id, item in enumerate(conll['train']['tokens'][:tr_size]):
 		custom_train = custom_train.append({'tokens':item, 'ner_tags':conll['train']['ner_tags'][id]}, ignore_index=True)
+		conll_ids_to_remove.append(id)
 
 	for id, item in enumerate(conll['test']['tokens'][:test_size]):
 		custom_test = custom_test.append({'tokens':item, 'ner_tags':conll['test']['ner_tags'][id]}, ignore_index=True)
 
 	print(custom_train.shape)
 	print(custom_test.shape)
+
+	np.save("conll_ids_to_remove.npy",conll_ids_to_remove)
 
 	return custom_train, custom_test
 
@@ -233,15 +237,18 @@ def get_tags_in_format(list_of_text, list_of_names, filename):
 def load_custom_data(train_data_file, test_data_file, train_desc_column, test_desc_column, train_tag_column, test_tag_column, split):
 
 	train_data = pd.read_csv(train_data_file, sep='\t')
+	ht_data_for_testing = train_data.iloc[200:]
+	ht_data_for_testing.to_csv("../../data/Listcrawler_baseline_test.tsv",sep='\t')
+	train_data = train_data.iloc[:200]
 	train_data['processed_text'] = train_data[train_desc_column].apply(lambda x: preprocess_bert(x))
 	train_data[train_tag_column] = train_data[train_tag_column].apply(lambda x: string_to_list(x))
-	new_data_train = get_tags_in_format(train_data['processed_text'], train_data[train_tag_column], "/home/pnair6/McGill/Research/HT/NER/bert_ner_fine_tune/data_feb18/ht_formatted_data_train.csv")
+	new_data_train = get_tags_in_format(train_data['processed_text'], train_data[train_tag_column], "/home/pnair6/McGill/Research/HT/NER/bert_ner_fine_tune/data_for_fine_tune_jun2/ht_formatted_data_train.csv")
 
 	if split:
 		test_data = pd.read_csv(test_data_file, sep='\t')
 		test_data['processed_text'] = test_data[test_desc_column].apply(lambda x: preprocess_bert(x))
 		test_data[test_tag_column] = test_data[test_tag_column].apply(lambda x: string_to_list(x))
-		new_data_test = get_tags_in_format(test_data['processed_text'], test_data[test_tag_column], "/home/pnair6/McGill/Research/HT/NER/bert_ner_fine_tune/data_feb18/ht_formatted_data_test.csv")
+		new_data_test = get_tags_in_format(test_data['processed_text'], test_data[test_tag_column], "/home/pnair6/McGill/Research/HT/NER/bert_ner_fine_tune/data_for_fine_tune_jun2/ht_formatted_data_test.csv")
 	
 		return new_data_train, new_data_test
 
@@ -325,9 +332,9 @@ if __name__ == '__main__':
 	if args.merge:
 		conll = load_conll()
 		# "/home/pnair6/McGill/Research/HT/NER/bert_ner_fine_tune/data_feb18/ht_formatted_data"
-		#new_train, new_test = merge(conll, data_train, data_test)
-		train_path = "/home/pnair6/McGill/Research/HT/NER/bert_ner_fine_tune/test_sets/train.txt"
-		test_path = "/home/pnair6/McGill/Research/HT/NER/bert_ner_fine_tune/data_feb18/test.txt"
+		new_train, new_test = merge(conll, data_train, data_test)
+		train_path = "/home/pnair6/McGill/Research/HT/NER/bert_ner_fine_tune/data_for_fine_tune_jun2/train.txt"
+		test_path = "/home/pnair6/McGill/Research/HT/NER/bert_ner_fine_tune/data_for_fine_tune_jun2/test.txt"
 		csv_to_txt(new_train, new_test, train_path, test_path, args.split)		
 	else:
 		new_train, new_test = data_train, data_test
