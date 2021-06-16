@@ -23,10 +23,8 @@ from html.parser import HTMLParser
 import emoji
 import unidecode
 
-
-
-tr_size = 500
-test_size = 100
+tr_size = 5000
+test_size = 1000
 
 # compile regexes
 username_regex = re.compile(r'(^|[^@\w])@(\w{1,15})\b')
@@ -83,21 +81,23 @@ def apply_mapping(x):
 
 	return tag_correction_map[x]
 
-def merge(conll, custom_train, custom_test):
+def merge(conll, custom_train, custom_test, conll_flag=False):
 	# merges the custom HT dataset with the conll for downstream NER
 	# also saves the test sets for conll, the HT data (listcrawler) and the full conll for the sanity-check experiments
-	conll_ids_to_remove = []
-	for id, item in enumerate(conll['train']['tokens'][:tr_size]):
-		custom_train = custom_train.append({'tokens':item, 'ner_tags':conll['train']['ner_tags'][id]}, ignore_index=True)
-		conll_ids_to_remove.append(id)
+	if conll_flag:
+		custom_train = pd.DataFrame(columns=['tokens','ner_tags'])
+		custom_test = pd.DataFrame(columns=['tokens','ner_tags'])
 
-	for id, item in enumerate(conll['test']['tokens'][:test_size]):
+	for id, item in tqdm(enumerate(conll['train']['tokens'][:tr_size])):
+		custom_train = custom_train.append({'tokens':item, 'ner_tags':conll['train']['ner_tags'][id]}, ignore_index=True)
+
+	for id, item in tqdm(enumerate(conll['test']['tokens'][:test_size])):
 		custom_test = custom_test.append({'tokens':item, 'ner_tags':conll['test']['ner_tags'][id]}, ignore_index=True)
 
 	print(custom_train.shape)
 	print(custom_test.shape)
 
-	np.save("conll_ids_to_remove.npy",conll_ids_to_remove)
+	print(custom_train.ner_tags.value_counts())
 
 	return custom_train, custom_test
 
@@ -237,18 +237,18 @@ def get_tags_in_format(list_of_text, list_of_names, filename):
 def load_custom_data(train_data_file, test_data_file, train_desc_column, test_desc_column, train_tag_column, test_tag_column, split):
 
 	train_data = pd.read_csv(train_data_file, sep='\t')
-	ht_data_for_testing = train_data.iloc[200:]
-	ht_data_for_testing.to_csv("../../data/Listcrawler_baseline_test.tsv",sep='\t')
-	train_data = train_data.iloc[:200]
+	# ht_data_for_testing = train_data.iloc[200:]
+	# ht_data_for_testing.to_csv("../../data/Listcrawler_baseline_test.tsv",sep='\t')
+	# train_data = train_data.iloc[:200]
 	train_data['processed_text'] = train_data[train_desc_column].apply(lambda x: preprocess_bert(x))
 	train_data[train_tag_column] = train_data[train_tag_column].apply(lambda x: string_to_list(x))
-	new_data_train = get_tags_in_format(train_data['processed_text'], train_data[train_tag_column], "/home/pnair6/McGill/Research/HT/NER/bert_ner_fine_tune/data_for_fine_tune_jun2/ht_formatted_data_train.csv")
+	new_data_train = get_tags_in_format(train_data['processed_text'], train_data[train_tag_column], "/home/pnair6/McGill/Research/HT/NER/bert_ner_fine_tune/data_for_fine_tune_jun9/ht_formatted_data_train.csv")
 
 	if split:
 		test_data = pd.read_csv(test_data_file, sep='\t')
 		test_data['processed_text'] = test_data[test_desc_column].apply(lambda x: preprocess_bert(x))
 		test_data[test_tag_column] = test_data[test_tag_column].apply(lambda x: string_to_list(x))
-		new_data_test = get_tags_in_format(test_data['processed_text'], test_data[test_tag_column], "/home/pnair6/McGill/Research/HT/NER/bert_ner_fine_tune/data_for_fine_tune_jun2/ht_formatted_data_test.csv")
+		new_data_test = get_tags_in_format(test_data['processed_text'], test_data[test_tag_column], "/home/pnair6/McGill/Research/HT/NER/bert_ner_fine_tune/data_for_fine_tune_jun9/ht_formatted_data_test.csv")
 	
 		return new_data_train, new_data_test
 
@@ -265,7 +265,7 @@ def csv_to_txt(train, test, train_path, test_path, split):
 		new_test = open(test_path, 'w')
 		print(test.shape)
 
-	id_to_tag_map = {'0':'0', '1':'B-PER', '2':'I-PER'}	
+	# id_to_tag_map = {'0':'0', '1':'B-PER', '2':'I-PER'}	
 
 	for id, row in tqdm(train.iterrows()):
 		tokens = row['tokens']
@@ -324,13 +324,20 @@ if __name__ == '__main__':
 
 	parser.add_argument('--merge', action="store_true", help='indicates whether to merge with conll or not')
 	parser.add_argument('--split', action='store_true', help='split into train-test or not')
+	parser.add_argument('--conll', action='store_true', help='indicates whether to process only conll or not')
 
 	args = parser.parse_args()
-
-	data_train, data_test = load_custom_data(args.train_data, args.test_data, args.train_dc, args.test_dc, args.train_tc, args.test_tc, args.split)
 	
-	if args.merge:
+	if args.conll:
 		conll = load_conll()
+		print("CoNLL loaded ...\n")
+		conll_train, conll_test = merge(conll, None, None, conll_flag=True)
+		print("Train-test split achieved ...\n")
+		csv_to_txt(conll_train, conll_test, "/home/mcb/users/pnair6/NER/NameExtractor/data/conll_only_train.txt","/home/mcb/users/pnair6/NER/NameExtractor/data/conll_only_test.txt", args.split)
+
+	elif args.merge:
+		conll = load_conll()
+		data_train, data_test = load_custom_data(args.train_data, args.test_data, args.train_dc, args.test_dc, args.train_tc, args.test_tc, args.split)
 		# "/home/pnair6/McGill/Research/HT/NER/bert_ner_fine_tune/data_feb18/ht_formatted_data"
 		new_train, new_test = merge(conll, data_train, data_test)
 		train_path = "/home/pnair6/McGill/Research/HT/NER/bert_ner_fine_tune/data_for_fine_tune_jun2/train.txt"
