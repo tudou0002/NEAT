@@ -10,18 +10,8 @@ from spacy.lang.en import English
 
 class FillMaskFilter:
     def __init__(self):
-        # self.tokenizer = ByteLevelBPETokenizer(
-        #     "ht_bert/vocab.json",
-        #     "ht_bert/merges.txt",
-        #     # model_max_length = 120, 
-        # )
-        # self.tokenizer_tokenizer.post_processor = BertProcessing(
-        #     ("</s>", tokenizer.token_to_id("</s>")),
-        #     ("<s>", tokenizer.token_to_id("<s>")),
-        # )
-        # self.tokenizer.enable_truncation(max_length=512)
 
-        tokenizer = RobertaTokenizerFast.from_pretrained("ht_bert", max_len=512)
+        tokenizer = RobertaTokenizerFast.from_pretrained("ht_bert_v3", max_len=512)
         config = RobertaConfig(
             vocab_size=52_000,
             max_position_embeddings=514,
@@ -30,12 +20,12 @@ class FillMaskFilter:
             type_vocab_size=1,
         )
 
-        model = RobertaForMaskedLM(config=config).from_pretrained("ht_bert")
+        model = RobertaForMaskedLM(config=config).from_pretrained("ht_bert_v3")
 
         self.fill_mask = pipeline(
             "fill-mask",
-            model="ht_bert",
-            tokenizer="ht_bert",
+            model="ht_bert_v3",
+            tokenizer="ht_bert_v3",
             top_k=20,
         )
         
@@ -79,7 +69,6 @@ class FillMaskFilter:
             try:
                 word_idx = context_list.index(word.lower())
             except:
-                # print(context_list, word)
                 return {}
             window = ' '.join(context_list[max(0,word_idx-window_size):min(len(context_list), word_idx+window_size)])
             
@@ -87,8 +76,14 @@ class FillMaskFilter:
             info_dict['context'] = window
 
             fill_mask_sim = self.fill_mask(window)
+            # positive confidence
             ratio = self.compute_ratio(fill_mask_sim, word.lower())
             info_dict['ratio'] = ratio
+            # negative conf
+            if word in [fill_mask_sim[i]['token_str'].strip('Ġ').lower() for i in range(3)] :
+                info_dict['ratio'] *= 0
+            else:
+                info_dict['ratio'] *= 1
             results.append(info_dict)
 
         return results

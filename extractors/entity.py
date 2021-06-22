@@ -14,8 +14,10 @@ class Entity:
         self.begin_offset = begin_offset
         self.end_offset = begin_offset + len(text)
         self.type = type
-        self.context_confidence = 0
+        self.fill_mask_conf = 0
+        self.fill_mask_std = 0
         self.confidence = 0
+        
 
     def __len__(self):
         """The number of unicode characters in the entity, i.e. `entity.text`.
