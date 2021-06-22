@@ -41,7 +41,6 @@ class DictionaryExtractor(Extractor):
         for match_id, start, end in matches:
             span = doc[start:end]
             ent = Entity(span.text,span.start, self.type)
-            # ent.score = self.embedding.get_certainty(ent.text)
             result.append(ent)
-            ent.confidence = 0.6
+            ent.confidence = 0.5
         return result

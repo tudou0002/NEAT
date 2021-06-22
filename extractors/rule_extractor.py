@@ -16,9 +16,6 @@ class RuleExtractor(Extractor):
         matcher = Matcher(self.nlp.vocab)
         for k,v in self.patterns.items():
             matcher.add(k,[v])
-#         matcher.add('thirdMatch',  self.patterns[0])
-#         matcher.add('secondMatch',  self.patterns[1])
-#         matcher.add('firstMatch', self.patterns[2])
         return matcher
     
     def define_patterns(self):
@@ -40,9 +37,6 @@ class RuleExtractor(Extractor):
         pattern14 = [{"LOWER":"mz."},{"TAG": "NNP"}]
         pattern15 = [{"LOWER":"named"},{"TAG": "NNP"}]
     
-        # return ([pattern0,pattern1, pattern2, pattern3, pattern4],
-        #         [pattern5, pattern6, pattern7,pattern8,pattern9,pattern10,
-        #         pattern11,pattern12,pattern13,pattern14,pattern15])
         patterns={'pattern0':pattern0, 'pattern1':pattern1,'pattern2':pattern2,
                'pattern3':pattern3,'pattern4':pattern4,'pattern5':pattern5,
                'pattern6':pattern6,'pattern7':pattern7,'pattern8':pattern8,
@@ -65,16 +59,9 @@ class RuleExtractor(Extractor):
         result = []
         for match_id, start, end in matches:
             string_id = self.nlp.vocab.strings[match_id]
-#             if string_id=='thirdMatch':
-#                 name_start = start + 2
-#             elif string_id=='secondMatch':
-#                 name_start = start + 1
-#             else:
-#                 name_start = start
             name_start=start+self.weights[string_id][0]
             span = doc[name_start:end] 
             ent = Entity(span.text,span.start, self.type)
-            # ent.score = self.embedding.get_certainty(ent.text)
             ent.confidence = self.weights[string_id][1]
             result.append(ent)
         return result
