@@ -43,7 +43,7 @@ class NameExtractor(Extractor):
 
         return result_extractors
 
-    def extract(self, text, preprocess=True):
+    def extract(self, text, preprocess_text=True):
         """
             Extracts information from a text using the given extractor types.
         Args:
@@ -53,7 +53,7 @@ class NameExtractor(Extractor):
             List(str): the list of entities or the empty list if there are no matches.
         """
         results = []
-        if preprocess:
+        if preprocess_text:
             text = preprocess(text)
         for ext in self.primary:
             results.extend(ext.extract(text))
