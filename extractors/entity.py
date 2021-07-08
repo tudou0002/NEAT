@@ -17,6 +17,7 @@ class Entity:
         self.fill_mask_conf = 0
         self.fill_mask_std = 0
         self.confidence = 0
+        self.context = []
         
 
     def __len__(self):

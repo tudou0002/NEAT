@@ -61,22 +61,34 @@ class NameExtractor(Extractor):
         if results==[]:
             for ext in self.backoff:
                 results.extend(ext.extract(text))
+
+        # pass to the disambiguation layer        
         results_text = [result.text for result in results]
+        # print('text:', text)
+        text = re.sub(r'[\.,]+',' ',text)
         filtered_results = self.fillMaskFilter.disambiguate_layer(text, results_text)
+        # print('text:', text)
+        # print(results_text)
+        # print(results)
+        # print(filtered_results)
 
         # add the disambiguated ratio
         conf_dict = {} # key: entity   value: [confidence, fill_mask_conf]
         for result, filtered in zip(results, filtered_results):
             if result not in conf_dict:
-                conf_dict[result] = [result.confidence, filtered['ratio']]
+                conf_dict[result] = [result.confidence, filtered['ratio'], [filtered['context']]]
             else:
                 conf_dict[result][0]  *= result.confidence
                 conf_dict[result][1]  *= filtered['ratio']
+                conf_dict[result][2].append(filtered['context'])
 
+        # print(conf_dict)
         entity_list = []
         for ent, conf_list in conf_dict.items():
             ent.confidence = conf_list[0]
             ent.fill_mask_conf = conf_list[1]
+            ent.context = conf_list[2]
+            entity_list.append(ent)
         return entity_list
 
     
