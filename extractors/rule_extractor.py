@@ -43,6 +43,12 @@ class RuleExtractor(Extractor):
                'pattern9':pattern9,'pattern10':pattern10,'pattern11':pattern11,
                'pattern12':pattern12,'pattern13':pattern13,'pattern14':pattern14,
                 'pattern15':pattern15}
+        # weights = {'pattern0':(2, 0.2), 'pattern1':(2, 0.77),'pattern2':(2, 0.62),
+        #        'pattern3':(2, 0.47),'pattern4':(2, 0.11),'pattern5':(1, 0.47),
+        #        'pattern6':(1, 0.47),'pattern7':(1, 0.4),'pattern8':(1, 0.54),
+        #        'pattern9':(1, 0.47),'pattern10':(1, 0.47),'pattern11':(1, 0.47),
+        #        'pattern12':(1, 0.66),'pattern13':(1, 0.47),'pattern14':(1, 0.47),
+        #         'pattern15':(1, 0.47)}
         weights = {'pattern0':(2, 0.2), 'pattern1':(2, 0.77),'pattern2':(2, 0.62),
                'pattern3':(2, 0.47),'pattern4':(2, 0.11),'pattern5':(1, 0.47),
                'pattern6':(1, 0.47),'pattern7':(1, 0.4),'pattern8':(1, 0.54),
