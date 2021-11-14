@@ -1,5 +1,6 @@
 # ignore the virtual env
 ne/
+extractors/__pycache__/
 *.ipynb
 *.pyc
 __pychache__/
@@ -17,3 +18,4 @@ data/custom_ht_train_data.csv
 baselines/bert-model/fine_tuning/fine_tuned_bert/*
 baselines/bert-model/fine_tuning/ht_bert/*
 baselines/bert-model/fine_tuning/whole_mask_bert/*
+

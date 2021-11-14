@@ -4,7 +4,8 @@ import spacy
 import pandas as pd
 
 class CRFExtractor(Extractor):
-    def __init__(self, dict_file='extractors/src/nameslist.csv'):
+    def __init__(self, **kwargs):
+        dict_file = kwargs.pop('dict_file', 'extractors/src/nameslist.csv')
         Extractor.__init__(self)
         self.model = joblib.load('extractors/src/crf_model.joblib') 
         self.dictionary = self.load_word_dict(dict_file)
