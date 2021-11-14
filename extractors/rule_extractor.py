@@ -49,12 +49,18 @@ class RuleExtractor(Extractor):
         #        'pattern9':(1, 0.47),'pattern10':(1, 0.47),'pattern11':(1, 0.47),
         #        'pattern12':(1, 0.66),'pattern13':(1, 0.47),'pattern14':(1, 0.47),
         #         'pattern15':(1, 0.47)}
-        weights = {'pattern0':(2, 0.2), 'pattern1':(2, 0.77),'pattern2':(2, 0.62),
-               'pattern3':(2, 0.47),'pattern4':(2, 0.11),'pattern5':(1, 0.47),
-               'pattern6':(1, 0.47),'pattern7':(1, 0.4),'pattern8':(1, 0.54),
-               'pattern9':(1, 0.47),'pattern10':(1, 0.47),'pattern11':(1, 0.47),
-               'pattern12':(1, 0.66),'pattern13':(1, 0.47),'pattern14':(1, 0.47),
-                'pattern15':(1, 0.47)}
+        # weights = {'pattern0':(2, 0.36), 'pattern1':(2, 0.90),'pattern2':(2, 0.65),
+        #        'pattern3':(2, 0.63),'pattern4':(2, 0.6),'pattern5':(1, 0.5),
+        #        'pattern6':(1, 0.5),'pattern7':(1, 0.25),'pattern8':(1, 0.72),
+        #        'pattern9':(1, 0.5),'pattern10':(1, 0.5),'pattern11':(1, 0.5),
+        #        'pattern12':(1, 0.5),'pattern13':(1, 0.5),'pattern14':(1, 0.5),
+        #         'pattern15':(1, 0.75)}
+        weights = {'pattern0':(2, 0.5), 'pattern1':(2, 0.67),'pattern2':(2, 0.44),
+               'pattern3':(2, 0.35),'pattern4':(2, 0.72),'pattern5':(1, 0.5),
+               'pattern6':(1, 0.5),'pattern7':(1, 0.5),'pattern8':(1, 0.67),
+               'pattern9':(1, 0.5),'pattern10':(1, 0.5),'pattern11':(1, 0.5),
+               'pattern12':(1, 0.5),'pattern13':(1, 0.5),'pattern14':(1, 0.5),
+                'pattern15':(1, 0.75)}
         return (patterns,weights)
         
     def extract(self, text):
