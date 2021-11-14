@@ -26,7 +26,7 @@ class FillMaskFilter:
             "fill-mask",
             model="ht_bert_v3",
             tokenizer="ht_bert_v3",
-            top_k=20,
+            top_k=40,
         )
         
         df_names = pd.read_csv('extractors/src/nameslist.csv')
@@ -80,8 +80,8 @@ class FillMaskFilter:
             ratio = self.compute_ratio(fill_mask_sim, word.lower())
             info_dict['ratio'] = ratio
             # negative conf
-            if word in [fill_mask_sim[i]['token_str'].strip('Ġ').lower() for i in range(3)] :
-                info_dict['ratio'] *= 0
+            if word in [fill_mask_sim[i]['token_str'].strip('Ġ').lower() for i in range(40)] :
+                info_dict['ratio'] = -2
             else:
                 info_dict['ratio'] *= 1
             results.append(info_dict)
