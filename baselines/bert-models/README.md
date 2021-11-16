@@ -6,7 +6,7 @@ python transformer_bert.py --dataset \path\to\tsv\file\with\ads --model \path\to
 
 To use transformer-bert model from HuggingFace fine-tuned for NER on CoNLL2003 dataset, omit the `--model` parameter.
 
-To use other BERT-based fine-tuned models, first follow the instructions from [`fine-tuning/`](../fine-tuning/README.md/) and then rerun this command.
+To use other BERT-based fine-tuned models, first follow the instructions from [`fine-tuning/`](fine-tuning/README.md/) and then rerun this command.
 
 
 To run the experiment for general NER,
