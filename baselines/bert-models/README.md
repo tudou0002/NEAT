@@ -15,4 +15,4 @@ To run the experiment for general NER,
 python transformer_bert_general.py --dataset \path\to\tsv\file\with\ads --model \path\to\fine-tuned\BERT\model --res_column_name "column name for extracted results"
 ```
 
-We also release the HT_bert model fine-tuned on CoNLL2003 and WNUT17 [here] (https://drive.google.com/drive/folders/1uISQcXHAX58EmtXtZEHZ2gQdzSDtOY7f?usp=sharing)
+We also release the HT_bert model fine-tuned on CoNLL2003 and WNUT17 [here](https://drive.google.com/drive/folders/1uISQcXHAX58EmtXtZEHZ2gQdzSDtOY7f?usp=sharing)
