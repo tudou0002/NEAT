@@ -24,6 +24,11 @@ python -m spacy download en_core_web_sm
 python -m spacy download en_core_web_trf
 ```
 
+Extract the model for disambiguation:
+```bash
+tar -xzvf ht_bert_v3.tar.gz
+```
+
 To deactivate the virtual environment:
 ```
 deactivate
@@ -38,7 +43,7 @@ from extractors.name_extractor import NameExtractor
 # initialize a NameExtractor instance 
 # default primary extractors as dictionary and crf extractor
 # default backoff extractors is the rule extractor
-name_extractor = NameExtractor()
+name_extractor = NameExtractor(weights_dict='extractors/src/weights.json')
 text = "I'm Andriana,  Waiting to play with you "
 # there's a default text preprocessing step in the extract method
 results = name_extractor.extract(text=text)
