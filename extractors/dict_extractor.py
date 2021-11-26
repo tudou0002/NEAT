@@ -49,6 +49,8 @@ class DictionaryExtractor(Extractor):
         for match_id, start, end in matches:
             span = doc[start:end]
             ent = Entity(span.text,span.start, self.type)
-            result.append(ent)
             ent.base_conf = self.weights[ent.text.lower()]
+            ent.confidence = ent.base_conf
+            ent.type = 'dict'
+            result.append(ent)
         return result

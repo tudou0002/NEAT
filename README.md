@@ -41,10 +41,8 @@ There are two modules: name extractor and dictionary expansion.
 from extractors.name_extractor import NameExtractor
 
 # initialize a NameExtractor instance 
-# default primary extractors as dictionary and crf extractor
-# default backoff extractors is the rule extractor
 name_extractor = NameExtractor(weights_dict='extractors/src/weights.json')
-text = "I'm Andriana,  Waiting to play with you "
+text = "My name is Andriana."
 # there's a default text preprocessing step in the extract method
 results = name_extractor.extract(text=text)
 # return a list of Entity identified by the extractor
@@ -54,5 +52,5 @@ for ent in results:
     print('Entity text:', ent.text)
     print('Entity confidence score:', ent.confidence)
 # Entity text: Andriana
-# Entity confidence score: 0.235
+# Entity confidence score: 0.73
 ```

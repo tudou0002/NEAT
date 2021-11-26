@@ -1,6 +1,5 @@
 from extractors.dict_extractor import DictionaryExtractor
 from extractors.rule_extractor import RuleExtractor
-from extractors.crf_extractor import CRFExtractor
 from extractors.extractor import Extractor
 from extractors.filter import *
 from extractors.utils import *
@@ -51,9 +50,11 @@ class NameExtractor(Extractor):
                 return e
         return None
 
-    def compute_combined(self, total_res, dict_res, rule_res):
+    def compute_combined(self, dict_res, rule_res):
         intersection = dict_res & rule_res
+        [print(ent) for ent in intersection]
         unilateral = (dict_res - rule_res) | (rule_res - dict_res)
+        [print(ent) for ent in unilateral]
 
         for res in intersection:
             res.base_conf = self.find_ent(res, dict_res).base_conf*0.5 + self.find_ent(res, rule_res).base_conf*0.5 
@@ -79,8 +80,11 @@ class NameExtractor(Extractor):
             text = preprocess(text)
         dict_res = set(self.dict_extractor.extract(text))
         rule_res = set(self.rule_extractor.extract(text))
-        total_res = dict_res | rule_res
-        results = self.compute_combined(total_res, dict_res, rule_res)
+        # [print(ent) for ent in dict_res]
+        # [print(ent) for ent in rule_res]
+        # total_res = dict_res.extend(rule_res)
+        # [print(ent) for ent in total_res]
+        results = self.compute_combined(dict_res, rule_res)
         
         # pass to the disambiguation layer        
         results_text = [result.text for result in results]

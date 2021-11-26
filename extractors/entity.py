@@ -38,4 +38,4 @@ class Entity:
         return hash((self.text, self.begin_offset))
 
     def __str__(self):
-        return 'text: '+ self.text + 'confidence: ' + self.confidence
+        return 'text: '+ self.text + ' confidence: ' + str(self.confidence)
