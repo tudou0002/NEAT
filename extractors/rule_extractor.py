@@ -74,6 +74,6 @@ class RuleExtractor(Extractor):
             name_start=start+self.weights[string_id][0]
             span = doc[name_start:end] 
             ent = Entity(span.text,span.start, self.type)
-            ent.confidence = self.weights[string_id][1]
+            ent.base_conf = self.weights[string_id][1]
             result.append(ent)
         return result

@@ -15,7 +15,7 @@ class Entity:
         self.end_offset = begin_offset + len(text)
         self.type = type
         self.fill_mask_conf = 0
-        self.fill_mask_std = 0
+        self.base_conf = 0
         self.confidence = 0
         self.context = []
         

@@ -50,5 +50,5 @@ class DictionaryExtractor(Extractor):
             span = doc[start:end]
             ent = Entity(span.text,span.start, self.type)
             result.append(ent)
-            ent.confidence = self.weights[ent.text.lower()]
+            ent.base_conf = self.weights[ent.text.lower()]
         return result

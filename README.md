@@ -30,6 +30,8 @@ deactivate
 ```
 
 # Usage
+There are two modules: name extractor and dictionary expansion. 
+### Name extractor
 ```python
 from extractors.name_extractor import NameExtractor
 
@@ -37,8 +39,15 @@ from extractors.name_extractor import NameExtractor
 # default primary extractors as dictionary and crf extractor
 # default backoff extractors is the rule extractor
 name_extractor = NameExtractor()
-text = "I'm Andriana,  Waiting to play with you  My Body Is Your Playground  Your time with me will be a full non rushed session fitted to your needs and desires. No Drama . No Hassle .No black GENTS ! I wan't to enjoy our time together  Come Shower With Me!! I am 100% Independent and am here for YOU!!! Let Me Create Your Dream Fantasy Find out why I'll have you coming back for more Always available to answeer you baby"
+text = "I'm Andriana,  Waiting to play with you "
 # there's a default text preprocessing step in the extract method
-name_extractor.extract(text=text)
-# return a list of strings with unqiue names identified by the extractor
+results = name_extractor.extract(text=text)
+# return a list of Entity identified by the extractor
+
+# Inspect on the entity
+for ent in results:
+    print('Entity text:', ent.text)
+    print('Entity confidence score:', ent.confidence)
+# Entity text: Andriana
+# Entity confidence score: 0.235
 ```

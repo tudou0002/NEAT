@@ -56,9 +56,9 @@ class NameExtractor(Extractor):
         unilateral = (dict_res - rule_res) | (rule_res - dict_res)
 
         for res in intersection:
-            res.confidence = self.find_ent(res, dict_res).confidence*0.5 + self.find_ent(res, rule_res).confidence*0.5 
+            res.base_conf = self.find_ent(res, dict_res).base_conf*0.5 + self.find_ent(res, rule_res).base_conf*0.5 
         for res in unilateral:
-            res.confidence = self.find_ent(res, unilateral).confidence*0.5
+            res.base_conf = self.find_ent(res, unilateral).base_conf*0.5
                 
         total_res = list(intersection | unilateral)
         
@@ -93,22 +93,23 @@ class NameExtractor(Extractor):
         conf_dict = {} # key: entity   value: [confidence, fill_mask_conf, context]
         for result, filtered in zip(results, filtered_results):
             if result not in conf_dict:
-                conf_dict[result] = [result.confidence, filtered['ratio'], [filtered['context']]]
+                conf_dict[result] = [result.base_conf, filtered['ratio'], [filtered['context']]]
             else:
-                conf_dict[result][0]  *= result.confidence
+                conf_dict[result][0]  *= result.base_conf
                 conf_dict[result][1]  *= filtered['ratio']
                 conf_dict[result][2].append(filtered['context'])
 
         entity_list = []
         for ent, conf_list in conf_dict.items():
-            ent.confidence = conf_list[0]
+            ent.base_conf = conf_list[0]
             ent.fill_mask_conf = conf_list[1]
             ent.context = conf_list[2]
+            ent.confidence = ent.base_conf*0.5+ent.fill_mask_conf*0.5
             entity_list.append(ent)
 
-        # print([(ent.text, ent.confidence, ent.fill_mask_conf) for ent in entity_list])
-        return [ent.text for ent in entity_list if ent.confidence*0.5+ent.fill_mask_conf*0.5>=self.threshold]
-        # return entity_list
+        # print([(ent.text, ent.base_conf, ent.fill_mask_conf) for ent in entity_list])
+        # return [ent.text for ent in entity_list if ent.base_conf*0.5+ent.fill_mask_conf*0.5>=self.threshold]
+        return entity_list
 
     
     
