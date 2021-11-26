@@ -37,8 +37,6 @@ class NameExtractor(Extractor):
                 result_extractors.append(DictionaryExtractor(**kwargs))
             elif extractor == 'rule':
                 result_extractors.append(RuleExtractor(**kwargs))
-            # elif extractor == 'crf':
-            #     result_extractors.append(CRFExtractor(**kwargs))
             else:
                 raise NameError("Invalid extractor type! The extractor type input must be 'dict', 'rule' or 'crf'")
 
@@ -52,9 +50,7 @@ class NameExtractor(Extractor):
 
     def compute_combined(self, dict_res, rule_res):
         intersection = dict_res & rule_res
-        [print(ent) for ent in intersection]
         unilateral = (dict_res - rule_res) | (rule_res - dict_res)
-        [print(ent) for ent in unilateral]
 
         for res in intersection:
             res.base_conf = self.find_ent(res, dict_res).base_conf*0.5 + self.find_ent(res, rule_res).base_conf*0.5 
@@ -80,15 +76,10 @@ class NameExtractor(Extractor):
             text = preprocess(text)
         dict_res = set(self.dict_extractor.extract(text))
         rule_res = set(self.rule_extractor.extract(text))
-        # [print(ent) for ent in dict_res]
-        # [print(ent) for ent in rule_res]
-        # total_res = dict_res.extend(rule_res)
-        # [print(ent) for ent in total_res]
         results = self.compute_combined(dict_res, rule_res)
         
         # pass to the disambiguation layer        
         results_text = [result.text for result in results]
-        # print('text:', text)
         text = re.sub(r'[\.,]+',' ',text)
         filtered_results = self.fillMaskFilter.disambiguate_layer(text, results_text)
       

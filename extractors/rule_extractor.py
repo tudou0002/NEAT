@@ -2,7 +2,6 @@ import spacy
 from spacy.matcher import Matcher
 from extractors.extractor import Extractor
 from extractors.entity import Entity
-from extractors.embeddings.fasttext import FasttextEmbeddings
 
 class RuleExtractor(Extractor):
     def __init__(self, **kwargs):

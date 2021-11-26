@@ -4,7 +4,6 @@ import pandas as pd
 from extractors.extractor import Extractor
 from spacy.matcher import PhraseMatcher
 from extractors.entity import Entity
-from extractors.embeddings.fasttext import FasttextEmbeddings
 
 class DictionaryExtractor(Extractor):
     def __init__(self,**kwargs):
