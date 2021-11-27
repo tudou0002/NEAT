@@ -1,5 +1,5 @@
-# nameExtractor
-
+# NEAT
+This is the repository for **NEAT**(Name Extraction Against Trafficking). NEAT is designed for extracting person names from escort ads. It effectively combines classic  rule-based and dictionary extractors with a contextualized language model to capture ambiguous names and adapts to adversarial changes in the text by expanding its dictionary. **NEAT** shows 23% improvement on average in the F1 classification score for name extraction compared to previous state-of-the-art in two domain-specific datasets.
 
 ## Installation
 Clone or fork this repository, open a terminal window and in the directory where you downloaded nameextractor, type the following commands   
@@ -35,7 +35,7 @@ deactivate
 ```
 
 # Usage
-There are two modules: name extractor and dictionary expansion. 
+ 
 ### Name extractor
 ```python
 from extractors.name_extractor import NameExtractor
