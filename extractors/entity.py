@@ -28,8 +28,8 @@ class Entity:
         return self.text.length
 
     def __eq__(self, other):
-        """Two entities will equal to each other if they have the same class, 
-        same attributes and from the same parent document. 
+        """Two entities will be equal to each other if they have the same text and 
+        same begin offset. 
 
         """
         return self.text == other.text and self.begin_offset == other.begin_offset

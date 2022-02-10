@@ -9,13 +9,13 @@ class DictionaryExtractor(Extractor):
         model = kwargs.pop('model', 'en_core_web_sm')
         dict_file = kwargs.pop('dict_file', 'extractors/src/nameslist.csv')
         Extractor.__init__(self, model)
-        # load dictionary with weights if possible
-        # else load the default dictionary and set every word's weight as 0.5
         try:
+            # load dictionary with weights if possible
             weights_file = kwargs.pop('weights_dict')
             self.weights = self.load_weight_dict(weights_file)
             self.terms = list(self.weights.keys())
         except:
+            # else load the default dictionary and set every word's weight as 0.5
             try:
                 self.terms = kwargs.pop('dictionary')
             except:
@@ -36,7 +36,6 @@ class DictionaryExtractor(Extractor):
         newwordlist = df_names['Name']
         return list(set([word.strip().lower() for word in newwordlist]))
     
-
     def create_matcher(self):
         matcher = PhraseMatcher(self.nlp.vocab,attr="LOWER")
         if len(self.terms)>=len(self.weights):
@@ -50,7 +49,7 @@ class DictionaryExtractor(Extractor):
         doc = self.nlp(text)
         matches = self.matcher(doc)
         result = []
-        for match_id, start, end in matches:
+        for _, start, end in matches:
             span = doc[start:end]
             ent = Entity(span.text,span.start, self.type)
             ent.base_conf = self.weights[ent.text.lower()]

@@ -52,5 +52,5 @@ for ent in results:
     print('Entity text:', ent.text)
     print('Entity confidence score:', ent.confidence)
 # Entity text: Andriana
-# Entity confidence score: 0.73
+# Entity confidence score: 0.7175
 ```

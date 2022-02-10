@@ -7,11 +7,9 @@ from extractors.utils import *
 class NameExtractor(Extractor):
     def __init__(self, threshold=0.12, **kwargs):
         """
-        Initialize the extractor, storing the extractors types and backoff extractor types.
+        Initialize the dictionary and rule extractors
         Args:
-            extractors (list): extractor types that will always apply extraction on the text
-            backoff (list): extractor types that will only apply extraction on the text if all
-                of the primary extractors failed to extract some names.
+            threshold: a float that controls the confidence score used in filtering out the output.
         Returns:
         """
         self.dict_extractor = DictionaryExtractor(**kwargs)
@@ -19,34 +17,28 @@ class NameExtractor(Extractor):
         self.fillMaskFilter = FillMaskFilter()
         self.threshold = threshold
 
-    
-    # def initialize_extractors(self, extractor_type:list, **kwargs):
-    #     """
-    #     Creates the extractors based on the given type
-    #     Args:
-    #         extractor_type (list): 'dict', 'rule',
-    #     Returns:
-    #         List(extractor): returns a list of extractor object or 
-    #                          empty list if the extractor_type is an empty list
-    #     """
-    #     result_extractors = []
-    #     for extractor in extractor_type:
-    #         if extractor == 'dict':
-    #             result_extractors.append(DictionaryExtractor(**kwargs))
-    #         elif extractor == 'rule':
-    #             result_extractors.append(RuleExtractor(**kwargs))
-    #         else:
-    #             raise NameError("Invalid extractor type! The extractor type input must be 'dict', 'rule' or 'crf'")
-
-    #     return result_extractors
-
-    def find_ent(self, ent, ent_list):
+    def find_ent(self, target_word, ent_list):
+        """
+        Return the entity if it is the same as the target entity. Inputs should guarantee there will be a match.s
+        Args:
+            target_word: A string value that holds the word you want to search.
+            ent_list: A set of Entities that you want to search from.
+        Returns:
+        """
         for e in ent_list:
-            if ent==e:
+            if target_word==e:
                 return e
         return None
 
     def compute_combined(self, dict_res, rule_res):
+        """
+        Compute the confidence score for each predicted word from the base extractors.
+        Args:
+            dict_res: A set of Entities extracted from the dictionary extractor.
+            rule_res: A set of Entities extracted from the rule extractor.
+        Returns:
+            A list that contians all unique Entities with the combined confidence from the base extractors.
+        """
         intersection = dict_res & rule_res
         unilateral = (dict_res - rule_res) | (rule_res - dict_res)
 
@@ -59,16 +51,14 @@ class NameExtractor(Extractor):
         
         return total_res
 
-    
-
     def extract(self, text, preprocess_text=True):
         """
-            Extracts information from a text using the given extractor types.
+            Extracts information from a text using NEAT.
         Args:
-            text (str): the text to extract from. Usually a piece of ad.
-            preprocess(bool): True if needed preprocessing
+            text (str): the text to extract from. Usually a piece of ad description or its title.
+            preprocess(bool): set to True if the input text needs preprocessing before the extraction. Default is True.
         Returns:
-            List(Entity): the list of entities or the empty list if there are no matches.
+            List(Entity): a list of entities or the empty list if there are no extracted names.
         """
         if preprocess_text:
             text = preprocess(text)
@@ -93,12 +83,14 @@ class NameExtractor(Extractor):
                 conf_dict[result][2].append(filtered['context'])
 
         entity_list = []
+        # compute and record the confidence score in the "confidence" field
         for ent, conf_list in conf_dict.items():
             ent.base_conf = conf_list[0]
             ent.fill_mask_conf = conf_list[1]
             ent.context = conf_list[2]
             ent.confidence = ent.base_conf*0.5+ent.fill_mask_conf*0.5
-            entity_list.append(ent)
+            if ent.confidence >= self.threshold:
+                entity_list.append(ent)
 
         return entity_list
 
