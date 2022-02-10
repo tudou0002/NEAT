@@ -1,5 +1,4 @@
-import spacy
-import os, json
+import json
 import pandas as pd
 from extractors.extractor import Extractor
 from spacy.matcher import PhraseMatcher
@@ -10,14 +9,17 @@ class DictionaryExtractor(Extractor):
         model = kwargs.pop('model', 'en_core_web_sm')
         dict_file = kwargs.pop('dict_file', 'extractors/src/nameslist.csv')
         Extractor.__init__(self, model)
-        try:
-            self.terms = kwargs.pop('dictionary')
-        except:
-            self.terms = self.load_word_dict(dict_file)
+        # load dictionary with weights if possible
+        # else load the default dictionary and set every word's weight as 0.5
         try:
             weights_file = kwargs.pop('weights_dict')
             self.weights = self.load_weight_dict(weights_file)
+            self.terms = list(self.weights.keys())
         except:
+            try:
+                self.terms = kwargs.pop('dictionary')
+            except:
+                self.terms = self.load_word_dict(dict_file)
             self.weights = {n:0.5 for n in self.terms}
         self.matcher = self.create_matcher()
         self.type = 'dict'
@@ -37,7 +39,10 @@ class DictionaryExtractor(Extractor):
 
     def create_matcher(self):
         matcher = PhraseMatcher(self.nlp.vocab,attr="LOWER")
-        patterns = [self.nlp.make_doc(text) for text in self.terms]
+        if len(self.terms)>=len(self.weights):
+            patterns = [self.nlp.make_doc(text) for text in self.terms]
+        else:
+            patterns = [self.nlp.make_doc(text) for text in self.weights.keys()]
         matcher.add('namelist', None, *patterns)
         return matcher
         

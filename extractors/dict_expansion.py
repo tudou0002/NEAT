@@ -4,14 +4,13 @@ from spacy.lang.en import English
 import math
 import nltk
 from nltk.corpus import stopwords 
-import gensim 
+import json
 from gensim.models import Word2Vec 
 from spacy.lang.en import English
 import spacy
 from spacy.tokenizer import Tokenizer
 from collections import Counter
 from extractors.utils import *
-import numpy
 from extractors.name_extractor import NameExtractor
 from extractors.dict_extractor import DictionaryExtractor
 from extractors.rule_extractor import RuleExtractor
@@ -142,42 +141,70 @@ class Pfidf():
         den = math.log(self.N+1)
         return num / den
 
+def load_corpus(file):
+    with open(file, 'r') as f:
+        corpus = [line.strip() for line in f.readlines()]
+    return corpus
 
-def expand_dict(filepath):
-    """
-    Return a list of (word, confidence_score) pair.
-    1. load dataset, clean the corpus
-    2. extract names from corpus using dict and rule separately
-    3. apply pfidf and word2vec
+def load_json(file):
+    with open(file) as json_file:
+        weights = json.load(json_file)
+    return weights
 
-    Input: filepath of the csv file 
-    """
-    corpus, namelist = load_data(filepath)
+
+def write_json(weighted_dict, output):
+    with open(output, 'w') as json_file:
+        json.dump(weighted_dict, json_file)
+
+def main():
+    parser = argparse.ArgumentParser(description='to do')
+    parser.add_argument('-i', type=str, help='filepath of the csv file')
+    parser.add_argument('-o', type=str, help='output file path of the expanded weighted dictionary')
+    parser.add_argument('-d', type=str, help='file path of the current weighted dictionary')
+    args = parser.parse_args()
+
+    corpus = load_corpus(args.i)
+    namelist = load_json(args.d)
+
     cleaned_corpus = [preprocess(cps) for cps in corpus]
-    dict_names, regex_names = extract_names(cleaned_corpus)
-    candidates = calculate_candidate(corpus, namelist, dict_names, regex_names)
+    rule_ex = RuleExtractor()
+    rule_names = extract_names(cleaned_corpus, rule_ex)
+    rule_names = [name.text for names in rule_names for name in names]
+    full_ex = NameExtractor(weights_dict=args.d)
+    full_names= extract_names(cleaned_corpus, full_ex)
 
-    return candidates
+    pfidf_expand = Pfidf(cleaned_corpus, rule_names)
+    extractor_expand = EXT(full_names)
 
-def load_data(filepath):
-    df = pd.read_csv(filepath, delimiter='\t')
-    corpus = [t+' '+d for t, d in zip(df['title'], df['description'])]
-    full_dict = pd.read_csv('extractors/src/nameslist.csv').Name
-    
-    return corpus, full_dict
 
-def extract_names(corpus):
-    dict_ne = DictionaryExtractor()
-    regex_ne = RuleExtractor()
-    dict_names, regex_names = [], []
+
+    # candidates = expand_dict(args.f)
+    # print(candidates)
+
+
+# def expand_dict(filepath):
+#     """
+#     Return a list of (word, confidence_score) pair.
+#     1. load dataset, clean the corpus
+#     2. extract names from corpus using dict and rule separately
+#     3. apply pfidf and word2vec
+
+#     Input: filepath of the csv file 
+#     """
+#     corpus, namelist = load_data(filepath)
+#     cleaned_corpus = [preprocess(cps) for cps in corpus]
+#     dict_names, regex_names = extract_names(cleaned_corpus)
+#     candidates = calculate_candidate(corpus, namelist, dict_names, regex_names)
+
+#     return candidates
+
+def extract_names(corpus, extractor):
+    names = []
 
     for text in corpus:
-        dict_names.append([ent.text for ent in dict_ne.extract(text)])
-        regex_names.append([ent.text for ent in regex_ne.extract(text)])
-    dict_names = [i.lower() for j in dict_names for i in j]
-    regex_names = [i.lower() for j in regex_names for i in j]
+        names.append([ent.text for ent in extractor.extract(text)])
 
-    return dict_names, regex_names
+    return names
 
 def calculate_candidate(corpus, namelist,dict_names, regex_names):
     # initialize pfidf and word2vec instance
@@ -194,10 +221,5 @@ def calculate_candidate(corpus, namelist,dict_names, regex_names):
 
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description='to do')
-    parser.add_argument('-f', type=str, default='data_m/CanadaMax80_results.tsv', help='filepath of the csv file')
-    args = parser.parse_args()
-
-    candidates = expand_dict(args.f)
-    print(candidates)
+    main()
 

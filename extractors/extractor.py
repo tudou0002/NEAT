@@ -8,7 +8,6 @@ class Extractor(object):
     def __init__(self, model='en_core_web_sm'):
         self.nlp = spacy.load(model)
 
-
     def extract(self, *input_value, **configs):
         """
         Args:

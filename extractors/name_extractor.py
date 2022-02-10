@@ -5,7 +5,7 @@ from extractors.filter import *
 from extractors.utils import *
 
 class NameExtractor(Extractor):
-    def __init__(self, primary=['dict', 'rule'],backoff=[], threshold=0.12, **kwargs):
+    def __init__(self, threshold=0.12, **kwargs):
         """
         Initialize the extractor, storing the extractors types and backoff extractor types.
         Args:
@@ -14,33 +14,31 @@ class NameExtractor(Extractor):
                 of the primary extractors failed to extract some names.
         Returns:
         """
-        self.primary = self.initialize_extractors(primary, **kwargs)
-        self.backoff = self.initialize_extractors(backoff, **kwargs)
         self.dict_extractor = DictionaryExtractor(**kwargs)
         self.rule_extractor = RuleExtractor(**kwargs)
         self.fillMaskFilter = FillMaskFilter()
         self.threshold = threshold
 
     
-    def initialize_extractors(self, extractor_type:list, **kwargs):
-        """
-        Creates the extractors based on the given type
-        Args:
-            extractor_type (list): 'dict', 'rule',
-        Returns:
-            List(extractor): returns a list of extractor object or 
-                             empty list if the extractor_type is an empty list
-        """
-        result_extractors = []
-        for extractor in extractor_type:
-            if extractor == 'dict':
-                result_extractors.append(DictionaryExtractor(**kwargs))
-            elif extractor == 'rule':
-                result_extractors.append(RuleExtractor(**kwargs))
-            else:
-                raise NameError("Invalid extractor type! The extractor type input must be 'dict', 'rule' or 'crf'")
+    # def initialize_extractors(self, extractor_type:list, **kwargs):
+    #     """
+    #     Creates the extractors based on the given type
+    #     Args:
+    #         extractor_type (list): 'dict', 'rule',
+    #     Returns:
+    #         List(extractor): returns a list of extractor object or 
+    #                          empty list if the extractor_type is an empty list
+    #     """
+    #     result_extractors = []
+    #     for extractor in extractor_type:
+    #         if extractor == 'dict':
+    #             result_extractors.append(DictionaryExtractor(**kwargs))
+    #         elif extractor == 'rule':
+    #             result_extractors.append(RuleExtractor(**kwargs))
+    #         else:
+    #             raise NameError("Invalid extractor type! The extractor type input must be 'dict', 'rule' or 'crf'")
 
-        return result_extractors
+    #     return result_extractors
 
     def find_ent(self, ent, ent_list):
         for e in ent_list:
@@ -70,7 +68,7 @@ class NameExtractor(Extractor):
             text (str): the text to extract from. Usually a piece of ad.
             preprocess(bool): True if needed preprocessing
         Returns:
-            List(str): the list of entities or the empty list if there are no matches.
+            List(Entity): the list of entities or the empty list if there are no matches.
         """
         if preprocess_text:
             text = preprocess(text)
@@ -102,8 +100,6 @@ class NameExtractor(Extractor):
             ent.confidence = ent.base_conf*0.5+ent.fill_mask_conf*0.5
             entity_list.append(ent)
 
-        # print([(ent.text, ent.base_conf, ent.fill_mask_conf) for ent in entity_list])
-        # return [ent.text for ent in entity_list if ent.base_conf*0.5+ent.fill_mask_conf*0.5>=self.threshold]
         return entity_list
 
     
