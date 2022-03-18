@@ -1,8 +1,8 @@
 # from tokenizers.implementations import ByteLevelBPETokenizer
 # from tokenizers.processors import BertProcessing
-# from transformers import RobertaTokenizerFast
-# from transformers import RobertaConfig
-# from transformers import RobertaForMaskedLM
+from transformers import RobertaTokenizerFast
+from transformers import RobertaConfig
+from transformers import RobertaForMaskedLM
 from transformers import pipeline
 import pandas as pd
 
@@ -11,21 +11,21 @@ from spacy.lang.en import English
 class FillMaskFilter:
     def __init__(self):
 
-        # tokenizer = RobertaTokenizerFast.from_pretrained("ht_bert_v3", max_len=512)
-        # config = RobertaConfig(
-        #     vocab_size=52_000,
-        #     max_position_embeddings=514,
-        #     num_attention_heads=12,
-        #     num_hidden_layers=6,
-        #     type_vocab_size=1,
-        # )
+        tokenizer = RobertaTokenizerFast.from_pretrained("ht_bert_v3", max_len=512)
+        config = RobertaConfig(
+            vocab_size=52_000,
+            max_position_embeddings=514,
+            num_attention_heads=12,
+            num_hidden_layers=6,
+            type_vocab_size=1,
+        )
 
-        # model = RobertaForMaskedLM(config=config).from_pretrained("ht_bert_v3")
+        model = RobertaForMaskedLM(config=config).from_pretrained("ht_bert_v3")
 
         self.fill_mask = pipeline(
             "fill-mask",
-            model="ht_bert_v4",
-            tokenizer="roberta-base",
+            model="ht_bert_v3",
+            tokenizer=tokenizer,
             top_k=40,
         )
         
@@ -69,7 +69,10 @@ class FillMaskFilter:
             try:
                 word_idx = context_list.index(word.lower())
             except:
-                return {}
+                info_dict['context'] = ''
+                info_dict['ratio'] = 0
+                results.append(info_dict)
+                continue
             window = ' '.join(context_list[max(0,word_idx-window_size):min(len(context_list), word_idx+window_size)])
             
             window = window.replace(word.lower(), '<mask>',1)

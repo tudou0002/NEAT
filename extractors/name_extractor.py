@@ -5,7 +5,7 @@ from extractors.filter import *
 from extractors.utils import *
 
 class NameExtractor(Extractor):
-    def __init__(self, threshold=0.12, **kwargs):
+    def __init__(self, threshold=0.10, **kwargs):
         """
         Initialize the dictionary and rule extractors
         Args:

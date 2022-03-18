@@ -156,69 +156,69 @@ def write_json(weighted_dict, output):
     with open(output, 'w') as json_file:
         json.dump(weighted_dict, json_file)
 
+def combine_expansion(pfidf_candidates,neat_candidates, namelist, neat_weight=0.5):
+    results = {}
+    
+    def standarize(candidates):
+        if not candidates:
+            return {}
+        values = [v for _, v in candidates]
+        min_v, max_v = min(values), max(values)
+        
+        results = {k.lower(): (v-min_v)/(max_v-min_v) for k, v in candidates if k.lower() not in set(namelist)}
+        return results
+    
+    pfidf_words = set([k.lower() for k,v in pfidf_candidates if k.lower() not in set(namelist)])
+    neat_words = set([k.lower() for k,v in neat_candidates if k.lower() not in set(namelist)])
+    
+    pfidf_candidates = standarize(pfidf_candidates)
+    neat_candidates = standarize(neat_candidates)
+    
+    for word in neat_words:
+        results[word] = neat_candidates[word]*neat_weight + pfidf_candidates.get(word, 0)*(1-neat_weight)
+    
+    for word in pfidf_words-neat_words:
+        results[word] = pfidf_candidates.get(word, 0)*(1-neat_weight)
+    return results
+
+def extract_names(corpus, weights_file):
+    rule_names = []
+    neat_candidates = []
+    regex_ex = RuleExtractor()
+    neat_ex = NameExtractor(weights_dict=weights_file, threshold=0.12)
+
+    for text in corpus:
+        rule_names.append([ent.text.lower() for ent in regex_ex.extract(text)])
+        neat_candidates.extend([(ent.text, ent.confidence) for ent in neat_ex.extract(text)])
+    rule_names = [name.text for names in rule_names for name in names]
+
+    return rule_names, neat_candidates
+
 def main():
     parser = argparse.ArgumentParser(description='to do')
-    parser.add_argument('-i', type=str, help='filepath of the csv file')
+    parser.add_argument('-i', type=str, help='filepath of a txt file')
     parser.add_argument('-o', type=str, help='output file path of the expanded weighted dictionary')
     parser.add_argument('-d', type=str, help='file path of the current weighted dictionary')
     args = parser.parse_args()
 
     corpus = load_corpus(args.i)
-    namelist = load_json(args.d)
+    ori_weights = load_json(args.d)
 
     cleaned_corpus = [preprocess(cps) for cps in corpus]
-    rule_ex = RuleExtractor()
-    rule_names = extract_names(cleaned_corpus, rule_ex)
-    rule_names = [name.text for names in rule_names for name in names]
-    full_ex = NameExtractor(weights_dict=args.d)
-    full_names= extract_names(cleaned_corpus, full_ex)
+    rule_names, neat_candidates = extract_names(cleaned_corpus, args.d)
 
     pfidf_expand = Pfidf(cleaned_corpus, rule_names)
-    extractor_expand = EXT(full_names)
+    pfidf_candidates = [(k,v) for k,v in pfidf_expand.pfidf_dict.items() if v>=0.1]
+    namelist = [n.lower() for n in ori_weights.keys()]
+    combined_candidates = combine_expansion(pfidf_candidates,neat_candidates, namelist, neat_weight=0.5)
 
+    ori_length = len(ori_weights)
+    for k,v in combined_candidates.items():
+        ori_weights[k] = ori_weights.get(k,v)
+    added_count = len(ori_weights) - ori_length
 
-
-    # candidates = expand_dict(args.f)
-    # print(candidates)
-
-
-# def expand_dict(filepath):
-#     """
-#     Return a list of (word, confidence_score) pair.
-#     1. load dataset, clean the corpus
-#     2. extract names from corpus using dict and rule separately
-#     3. apply pfidf and word2vec
-
-#     Input: filepath of the csv file 
-#     """
-#     corpus, namelist = load_data(filepath)
-#     cleaned_corpus = [preprocess(cps) for cps in corpus]
-#     dict_names, regex_names = extract_names(cleaned_corpus)
-#     candidates = calculate_candidate(corpus, namelist, dict_names, regex_names)
-
-#     return candidates
-
-def extract_names(corpus, extractor):
-    names = []
-
-    for text in corpus:
-        names.append([ent.text for ent in extractor.extract(text)])
-
-    return names
-
-def calculate_candidate(corpus, namelist,dict_names, regex_names):
-    # initialize pfidf and word2vec instance
-    pfidf_expand = Pfidf(corpus,regex_names)
-    w2v_expand =W2V(corpus,dict_names, namelist)
-
-    pfidf_candidates = pfidf_expand.expand(thres=0.2, verbose=0)
-    w2v_candidates = w2v_expand.expand(thres=5)
-    print('pfidf_candidates:', pfidf_candidates)
-    print('word2vec candidates:', w2v_candidates)
-
-    total_candidates = set([w.lower() for w in pfidf_candidates]) | set([w.lower() for w in w2v_candidates])
-    return list(total_candidates)
-
+    write_json(ori_weights, args.o)
+    print("===========Added %d words to the dictionary==========" % added_count)
 
 if __name__ == '__main__':
     main()
