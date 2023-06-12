@@ -4,5 +4,5 @@ joblib==0.14.1
 numpy==1.18.1
 sklearn-crfsuite==0.3.6
 fasttext==0.9.2
-transformers==4.1.1
+transformers==4.30.0
 truecase==0.0.12
